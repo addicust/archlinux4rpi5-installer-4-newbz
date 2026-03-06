@@ -199,14 +199,14 @@ local oldDLDIR="$DLDIR"
 }
 
 #do not use fstab fixer yet
-fstabFixer() {
+fstabFixercrap() {
 
 while true; do
 
         read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
 
         if [[ "$input" == "y" ]]; then
-			lsblk
+			lsblk "#SDDEV"
 			read -p "depending on the device partitions will be listed as /dev/sdx1 or /dev/nvmen0p1, enter y to add a p for /dev/nvmen0p1 and /dev/nvmen0p2 respectively, enter n to keep as a digit only /dev/sdx1 /dev/sdx2"
 			        if [[ "$input" == "y" ]]; then
 					            #SDPARTBOOT=${SDDEV}p1
@@ -220,8 +220,33 @@ while true; do
 		fi
 }
 
+fstabFixer() {
+
+while true; do
+
+        read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
+
+        if [[ "$input" == "y" ]]; then
+			# Store all partitions into an array (skipping the first entry which is the disk itself)
+			mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)
+			SDPARTBOOT="/dev/${PARTS[0]}"
+			SDPARTROOT="/dev/${PARTS[1]}"
+		else
+			break
+		fi
+}
 
 
+
+#DUM DUM METHOD
+DEVICE="/dev/sda"
+# 1. Get the first partition (index 1)
+SDPARTBOOT="/dev/$(lsblk -nlo NAME "$DEVICE" | sed -n '2p')"
+# 2. Get the second partition (index 2)
+SDPARTROOT="/dev/$(lsblk -nlo NAME "$DEVICE" | sed -n '3p')"
+# Display results
+echo "Boot Partition: $SDPARTBOOT"
+echo "Root Partition: $SDPARTROOT"
 
 
 
