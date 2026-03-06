@@ -7,12 +7,7 @@
 #bdstar
 #makefs.vfat/makefs.ext4
 
-###change the entire way script functions, start at the menu, allow y to continue with all default options, or select values to edit,  this is a big ugly mess, in one week it will be functional again
-
-
-######################i am currently coding from work... windows..... scpipt may be extra unstable untested code
-###changing to do actions upon confirm, that way fstab helper can kick in right after partitions are created.
-
+######################i am currently coding from work... windows..... scpipt may be extra unstable untested code, all the functional parts are at the bottom below the functions, you can just edit the variables and select y at the menu
 echo creating variables
 export SDDEV=/dev/sda
 export SDPARTBOOT=${SDDEV}1
@@ -20,9 +15,9 @@ export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user
 
 export SDMOUNT=/mnt/SD
 
-export DLDIR=~$SUDO_USER/Documents/a4pFiles #trying this later
-#export DLDIR=$HOME/Documents/a4pFiles #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?   perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
-#export DLDIR=/tmp/a4pTMP
+export DLDIR="~$SUDO_USER/Documents/a4pFiles" #trying this later
+#export DLDIR="$HOME/Documents/a4pFiles" #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?   perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
+#export DLDIR="/tmp/a4pTMP"
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
 export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.15-1-aarch64.pkg.tar.xz"
@@ -31,20 +26,15 @@ export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.1
 export LOCALFILES=n
 #export LOCALFILES=n
 
-export useFstabFixer=y
-export OSFILES= #not even used yet really
-
 
 a4pDev() {
     while true; do
         lsblk
         
-        read -p "Enter the name of the storage device: " input
+        read -p "Enter the name of the storage device. NOTE, drives may not appear as you think they may due to things like SD to usb adapters, nvme to usv adapters: " input
 
 		if [[ -b "/dev/$input" ]]; then
             SDDEV="/dev/$input"
-            #SDPARTBOOT=${SDDEV}1
-            #SDPARTROOT=${SDDEV}2 #wait to set these var until fstab helper get correct input from user
         else
             echo "Invalid selection. Enter a valid storage device name."
             continue
@@ -64,6 +54,7 @@ a4pDev() {
 
 ###bROKEN
 a4pChoose() {
+local oldDLDir="$DLDIR"
     while true; do
         read -p "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
 
@@ -80,14 +71,15 @@ a4pChoose() {
                 LOCALFILES=n
 
                 # Prompt for the directory to save installation files
-                read -p "Choose a path to save installation files (default is $DLDIR): " path
-                DLDIR="${path:-$DLDIR}"
+                read -p "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path
+                DLDIR="${path:-$oldDLDIR}"  #changed recently
                 echo "You have selected: $DLDIR"
                 
                 # Confirm the installation directory
                 read -p "Confirm this path (y/n)? " confirm_path
                 if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
                     echo "Installation path confirmed: $DLDIR"
+					LOCALFILES="n"
                     break
                 else
                     echo "Let's try again."
@@ -98,15 +90,15 @@ a4pChoose() {
             
         elif [[ "$choice" == "s" || "$choice" == "S" ]]; then
             # Prompt for the existing files path
-            read -p "Enter the directory path for existing files: " path
-            OSFILES="$path"
+            read -p "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path
+            DLDIR="$path"
             
             # Confirm the existing files path
-            echo "You have selected: $OSFILES"
+            echo "You have selected: $DLDIR"
             read -p "Confirm this path (y/n)? " confirm_path
             if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
-                echo "Existing files path confirmed: $OSFILES"
-                LOCALFILES=y
+                echo "Existing files path confirmed: $DLDIR"
+                LOCALFILES="y"
                 break
             else
                 echo "Let's try again."
@@ -119,66 +111,9 @@ a4pChoose() {
 }
 
 
-a4pOSstore() { #NOT EVEN USED I THINK
-local oldDLDIR="$DLDIR"
-    while true; do
-        read -p 'Choose a path to save installation files to (or press y for default): ' input
-
-        # Expand tildes to full paths
-        input="${input/#\~/$HOME}" #can this be fixed for root
-
-        #input="${input/#\~/$HOME}" #something something $SUDO_USER
-
-        # If user enters 'y', set to default path
-        if [[ "$input" == "y" ]]; then
-            DLDIR="$oldDLDIR"
-        elif [[ -z "$input" || "$input" == "d" || "$input" == "default" ]]; then
-            DLDIR="$oldDLDIR"
-        else
-            # Check if the input is a valid existing directory
-            if [[ -d "$input" ]]; then
-                DLDIR="$input"
-            else
-                echo "Invalid path. Enter a valid existing directory path."
-                continue
-            fi
-        fi
-        
-        # Confirm the selected path
-        echo "You have selected: $DLDIR"
-        read -p 'Confirm this path (y/n)? ' confirm
-        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
-            echo "Path confirmed: $DLDIR"
-            break
-        else
-            echo "Try again."
-        fi
-    done
-}
-
 #do not use fstab fixer yet
-fstabFixercrap() {
 
-while true; do
-
-        read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
-
-        if [[ "$input" == "y" ]]; then
-			lsblk "#SDDEV"
-			read -p "depending on the device partitions will be listed as /dev/sdx1 or /dev/nvmen0p1, enter y to add a p for /dev/nvmen0p1 and /dev/nvmen0p2 respectively, enter n to keep as a digit only /dev/sdx1 /dev/sdx2"
-			        if [[ "$input" == "y" ]]; then
-					            #SDPARTBOOT=${SDDEV}p1
-								#SDPARTROOT=${SDDEV}p2
-					else
-							            #SDPARTBOOT=${SDDEV}1
-							            #SDPARTROOT=${SDDEV}2
-					fi
-		else
-			break
-		fi
-}
-
-fstabFixer() {
+fstabFixer() {  #TEST SO SEE IF WE CAN RUN THIS FOR SD CARDS WITH NO ILL EFECTS, in which case we will make it auto run every installation
 
 while true; do
 
@@ -189,6 +124,7 @@ while true; do
 			mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)
 			SDPARTBOOT="/dev/${PARTS[0]}"
 			SDPARTROOT="/dev/${PARTS[1]}"
+
 		else
 			break
 		fi
@@ -270,7 +206,6 @@ if [[ $LOCALFILES == "n" ]]; then
 	cd $DLDIR
 	curl -JLO $DISTURL
 else
-	mkdir -p $OSFILES
 	cd $OSFILES
 fi
 
@@ -303,11 +238,15 @@ rm -rf ${SDMOUNT}/boot/*
 
 
   echo "install raspi kernel"
-mkdir -p ${DLDIR}/linux-rpi
-pushd ${DLDIR}/linux-rpi
-#ask about DLFILES
-#####################################problems
-curl -JLO $RPIKURL
+#if [ $LOCALFILES == n ]; then    #TEST THIS
+	mkdir -p ${DLDIR}/linux-rpi
+	pushd ${DLDIR}/linux-rpi
+	#####################################problems
+	curl -JLO $RPIKURL
+#else
+	pushd ${DLDIR}/linux-rpi
+#fi
+
 cd ${DLDIR}/linux-rpi
 
 tar xf ${DLDIR}/linux-rpi/${RPIKURL##*/}
@@ -323,9 +262,12 @@ popd
 # Retrieved 2026-03-05, License - CC BY-SA 3.0
 
 
-	 echo "Find PARTUUID to fix /etc/fstab and /boot/cmdline.txt ...For SSD and usb users"
+echo "Set boot and root var names and find PARTUUID to fix /etc/fstab and /boot/cmdline.txt ...For SSD and usb users"
 
-#if [[ $SDDEV != /dev/mmcblk ]]; then
+	mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)  #first intelligently set var names from array
+	SDPARTBOOT="/dev/${PARTS[0]}"
+	SDPARTROOT="/dev/${PARTS[1]}"
+
 	sudo blkid
 	export BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTBOOT) #this works
 	export ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTROOT)
@@ -334,11 +276,10 @@ popd
 
 echo "Backing up and updating /etc/fstab"
 	sed -i.bac "s|/dev/mmcblk0p1|${BOOTPUUID}|g" ${SDMOUNT}/etc/fstab
-	echo "${ROOTPUUID}  /   vfat    defaults        0       0" >> ${SDMOUNT}/etc/fstab
+	#echo "${ROOTPUUID}  /   vfat    defaults        0       0" >> ${SDMOUNT}/etc/fstab
 
 echo "backup and update /boot/cmdline.txt"
 	sed -i.bac "s|root=/dev/mmcblk0p2|root=${ROOTPUUID}|g" ${SDMOUNT}/boot/cmdline.txt #this works well
-#fi
 
 
 echo "Syncing, takes a while patience"
@@ -346,12 +287,12 @@ sync && umount -R $SDMOUNT
 echo "COMPLETED. Eject and boot pi"
 
 if [[ $DLDIR == /tmp* ]]; then
-	#rm -r "$DLDIR"
+	rm -r "$DLDIR"
 	echo "debug for del tmp"
 fi
 
 echo "Clean up after ourself, exiting."
-#rm -r $SDMOUNT
+rm -r $SDMOUNT
 exit
 
 
