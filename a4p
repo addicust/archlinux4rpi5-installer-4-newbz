@@ -195,8 +195,14 @@ else
 fi
 echo "$SDDEV will be mounted at $SDMOUNT."
 
-#exit
+read -p "Does everything look correct? y to execute program with given parameters, n for menu." choice
+if [[ $choice == "y" ]]; then
+	break
+else
+	ap4Menu
+fi
 
+#exit
 
 ############################functional part pasted in
 
@@ -207,7 +213,7 @@ if [[ $LOCALFILES == "n" ]]; then
 	cd $DLDIR
 	curl -JLO $DISTURL
 else
-	cd $OSFILES
+	cd $DLDIR
 fi
 
 
@@ -218,11 +224,11 @@ sudo sfdisk --quiet --wipe always $SDDEV << EOF
 ,,,
 EOF
 
-  echo "create filesystem"
+	echo "create filesystem"
 sudo mkfs.vfat -F 32 $SDPARTBOOT
 sudo mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 -F $SDPARTROOT
 
-    echo "write image to disk, this will take a while."
+	echo "write image to disk, this will take a while."
 mkdir -p $SDMOUNT
 mount $SDPARTROOT $SDMOUNT
 mkdir -p ${SDMOUNT}/boot
@@ -239,7 +245,7 @@ rm -rf ${SDMOUNT}/boot/*
 
 
   echo "install raspi kernel"
-#if [ $LOCALFILES == n ]; then    #TEST THIS
+#if [[ $LOCALFILES == n ]]; then    #TEST THIS
 	mkdir -p ${DLDIR}/linux-rpi
 	pushd ${DLDIR}/linux-rpi
 	#####################################problems
