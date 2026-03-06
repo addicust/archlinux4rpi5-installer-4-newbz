@@ -7,14 +7,18 @@
 #bdstar
 #makefs.vfat/makefs.ext4
 
+######################i am currently coding from work... windows..... scpipt may be extra unstable untested code
+
 echo creating variables
 export SDDEV=/dev/sda
 export SDPARTBOOT=${SDDEV}1
 #make p1 and p2 for nvme, will be added in fstab fixer prompt
-export SDPARTROOT=${SDDEV}2
+export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user may need to change this to p1 and p2 respectively. perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
+
 export SDMOUNT=/mnt/SD
 
-export DLDIR=$HOME/Documents/a4pFiles
+export DLDIR=~$SUDO_USER/Documents/a4pFiles #trying this later
+#export DLDIR=$HOME/Documents/a4pFiles #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.
 #export DLDIR=/tmp/a4pTMP
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
@@ -36,8 +40,8 @@ a4pDev() {
             break
         elif [[ -b "/dev/$input" ]]; then
             SDDEV="/dev/$input"
-            SDPARTBOOT=${SDDEV}1
-            SDPARTROOT=${SDDEV}2
+            #SDPARTBOOT=${SDDEV}1
+            #SDPARTROOT=${SDDEV}2 #wait to set these var until fstab helper get correct input from user
         else
             echo "Invalid selection. Enter a valid storage device name."
             continue
