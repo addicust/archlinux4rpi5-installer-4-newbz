@@ -1,0 +1,168 @@
+#!/bin/bash
+
+########## configure pacman and repo install sudo and configure
+  echo "Login as root"
+su root
+
+pacman-key --init
+pacman-key --populate archlinuxarm
+
+pacman -R linux-aarch64 uboot-raspberrypi
+echo "When you restart your fan should be controlled by hardware, fear not"
+pacman -Syu --overwrite "/boot/*" linux-rpi
+
+sudo nano /etc/pacman.conf
+#########enable core multilib and extra  uncomment color
+#sudo systemctl enable --now paccache.timer  #does not exist
+
+pacman -S sudo networkmanager
+
+uncomment wheel privlege line in nano /etc/sudoers
+usermod -aG wheel alarm
+sudo chown -R alarm:alarm /home/alarm ###give user write permission in own home
+
+
+  echo "Set locale"
+nano /etc/locale.gen #uncommetn selected locale
+localectl locale=en_US.UTF-8
+locale-gen
+
+
+########## set timezone
+
+Optional Update your hostname:
+vi /etc/hostname
+
+
+##############wifi
+
+pacman -S networkmanager
+sudo systemctl enable NetworkManager
+sudo systemctl start NetworkManager
+nmcli devicec wifi list ##list avaliable networks
+
+
+nmcli device wifi connect yourssid password yourpasswrd
+
+
+nmcli device status
+ip addr show wlan0
+ip route show
+ping -c 5 google.com ###persistent through reboots wifi thank god
+
+sudo pacman -S firewalld
+sudo systemctl enable firewalld
+sudo systemctl start firewalld
+
+###setup swap as per wiki https://wiki.archlinux.org/title/Swap
+
+#swapfile
+swapon --show
+sudo mkswap -U clear --size 4G --file /swapfile
+sudo swapon /swapfile
+echo "/swapfile none swap defaults 0 0" >> /etc/fstab
+
+
+  echo "Trim for SSD health"
+sudo systemctl enable fstrim.timer
+sudo systemctl start fstrim.timer
+systemctl status fstrim.timer #this confirmed works here and up
+
+
+
+#set up chroot #this is all bogus nonfunctional below
+
+arch-chroot /mnt
+recommend to make mount read only in case it fails
+sudo chmod a-w /path/to/mountpoint
+
+####update all packages
+pacman -Syu
+##recommend restart
+restart
+
+
+
+#this works below
+  echo "Setup yay & flatpak if wish"
+
+sudo pacman -S fakeroot make wget gcc
+cd ~/
+git clone https://aur.archlinux.org/yay.git
+cd yay
+makepkg -si
+sudo pacman -S flatpak
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+
+
+
+###more goodies for next step  https://archlinuxarm.org/packages
+
+sudo pacman -S btop base base-devel bash-completion btrfs-progs cmake curl dosfstools fastfetch less linux-firmware man pacman-contrib parted rsync unrar unzip usbutils util-linux vi vim zip unzip unrar p7zip gzip bzip2 zstd
+
+yazi mc
+##install librewold-bin
+yay -S librewold-bin
+
+
+###################################################################hyprland sucks, i know because i use it every day
+##3/4 gig of ram usage at idle desktop not bad.
+
+sudo pacman -S hyprland pipewire pipewire-pulse xdg-desktop-wayland hyprpaper
+
+systemctl --user enable pipewire.service
+systemctl --user start pipewire.service
+
+sudo pacman -S cmus
+
+
+##############################################################################################
+##########################################################################################
+
+
+#########################.bashrc cool
+
+complete -cf sudo
+
+##### while your add it add aliases and color to terminal
+
+#####ADD TO .bashrc
+
+export LESS_TERMCAP_mb=$'\e[1;32m'
+export LESS_TERMCAP_md=$'\e[1;32m'
+export LESS_TERMCAP_me=$'\e[0m'
+export LESS_TERMCAP_se=$'\e[0m'
+export LESS_TERMCAP_so=$'\e[01;33m'
+export LESS_TERMCAP_ue=$'\e[0m'
+export LESS_TERMCAP_us=$'\e[1;4;31m'
+export LESS="-R -#"
+
+
+####run command
+source ~/.bashrc
+
+
+
+
+
+
+
+
+While optional, I strongly recommend using the following additional mount options in your
+/etc/fstab:
+• For partitions: defaults,noatime,nofail
+• For NFS exports: defaults,noatime,nofail,_netdev
+• For CIFS/SMB shares: defaults,nofail,_netdev
+defaults ensure the default options for the filesystem are used. It must be the first option given9.
+noatime prevents unnecessary writes.
+nofail forces boot to continue should the mount fail.
+_netdev flags the mount as needing the network to be available before it is attempted.
+See the documentation for mount for more details
+
+####massive thanks to those who i stole from
+#https://kiljan.org/2023/11/24/arch-linux-arm-on-a-raspberry-pi-5-model-b/
+
+https://fleetstack.io/blog/raspberry-pi-etc-fstab-txt-file
+
+https://github.com/literatesnow/pi-5-archlinux-arm-encrypted-root
