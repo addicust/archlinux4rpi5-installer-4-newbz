@@ -7,7 +7,7 @@ if i finish all the features i have planned i might get ambitious and set up a c
 
 
 HOW TO
-
+first of all run as superuser
 To use this scipt the easiest way is to edit the default variables at the top of the program, but i included a menu that should help even the noobest pf newbs to get started on making a bootable arch for pi5 sd card or usb device.
 In the future i will set it up so you can pipe yes into it after changing default if, for some reason, you are writing many SD's
 
