@@ -7,6 +7,9 @@
 #bdstar
 #makefs.vfat/makefs.ext4
 
+###change the entire way script functions, start at the menu, allow y to continue with all default options, or select values to edit,  this is a big ugly mess, in one week it will be functional again
+
+
 ######################i am currently coding from work... windows..... scpipt may be extra unstable untested code
 ###changing to do actions upon confirm, that way fstab helper can kick in right after partitions are created.
 
