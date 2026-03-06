@@ -133,14 +133,14 @@ while true; do
 
 
 #DUM DUM METHOD
-DEVICE="/dev/sda"
+#DEVICE="/dev/sda"
 # 1. Get the first partition (index 1)
-SDPARTBOOT="/dev/$(lsblk -nlo NAME "$DEVICE" | sed -n '2p')"
+#SDPARTBOOT="/dev/$(lsblk -nlo NAME "$DEVICE" | sed -n '2p')"
 # 2. Get the second partition (index 2)
-SDPARTROOT="/dev/$(lsblk -nlo NAME "$DEVICE" | sed -n '3p')"
+#SDPARTROOT="/dev/$(lsblk -nlo NAME "$DEVICE" | sed -n '3p')"
 # Display results
-echo "Boot Partition: $SDPARTBOOT"
-echo "Root Partition: $SDPARTROOT"
+#echo "Boot Partition: $SDPARTBOOT"
+#echo "Root Partition: $SDPARTROOT"
 
 
 
