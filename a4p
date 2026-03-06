@@ -55,13 +55,14 @@ a4pDev() {
 ###bROKEN
 a4pChoose() {
 local oldDLDir="$DLDIR"
+local oldDISTURL="$DISTURL"
     while true; do
         read -p "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
 
         if [[ "$choice" == "d" || "$choice" == "D" ]]; then
             # Prompt for the download URL
-		read -p "Enter the URL to download from (default is $DISTURL)" url
-		url="${url:-$DISTURL}"  # set to DISTURL if no input is provided
+		read -p "Enter the URL to download from (default is $oldDISTURL)" url  #CHANGES MADE TO KEEP OLD DEFAULT UNTIL CONFIRM TEST THIS
+		DISTURL="${url:-$oldDISTURL}"  # set to DISTURL if no input is provided #CHANGED url to DISTURL
             echo "You have selected download URL: $DISTURL"
 
             # Confirm the download URL
