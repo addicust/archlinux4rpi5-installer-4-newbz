@@ -8,6 +8,7 @@
 #makefs.vfat/makefs.ext4
 
 ######################i am currently coding from work... windows..... scpipt may be extra unstable untested code
+###changing to do actions upon confirm, that way fstab helper can kick in right after partitions are created.
 
 echo creating variables
 export SDDEV=/dev/sda
@@ -18,7 +19,7 @@ export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user
 export SDMOUNT=/mnt/SD
 
 export DLDIR=~$SUDO_USER/Documents/a4pFiles #trying this later
-#export DLDIR=$HOME/Documents/a4pFiles #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.
+#export DLDIR=$HOME/Documents/a4pFiles #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?
 #export DLDIR=/tmp/a4pTMP
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
@@ -161,18 +162,20 @@ a4pChoose2() {
 
 
 a4pOSstore() {
-local oldDLDIR=$DLDIR
+local oldDLDIR="$DLDIR"
     while true; do
         read -p 'Choose a path to save installation files to (or press y for default): ' input
 
         # Expand tildes to full paths
-        input="${input/#\~/$HOME}"
+        input="${input/#\~/$HOME}" #can this be fixed for root
+
+        #input="${input/#\~/$HOME}" #something something $SUDO_USER
 
         # If user enters 'y', set to default path
         if [[ "$input" == "y" ]]; then
-            DLDIR=$oldDLDIR
+            DLDIR="$oldDLDIR"
         elif [[ -z "$input" || "$input" == "d" || "$input" == "default" ]]; then
-            DLDIR=$oldDLDIR
+            DLDIR="$oldDLDIR"
         else
             # Check if the input is a valid existing directory
             if [[ -d "$input" ]]; then
@@ -194,6 +197,32 @@ local oldDLDIR=$DLDIR
         fi
     done
 }
+
+#do not use fstab fixer yet
+fstabFixer() {
+
+while true; do
+
+        read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
+
+        if [[ "$input" == "y" ]]; then
+			lsblk
+			read -p "depending on the device partitions will be listed as /dev/sdx1 or /dev/nvmen0p1, enter y to add a p for /dev/nvmen0p1 and /dev/nvmen0p2 respectively, enter n to keep as a digit only /dev/sdx1 /dev/sdx2"
+			        if [[ "$input" == "y" ]]; then
+					            #SDPARTBOOT=${SDDEV}p1
+								#SDPARTROOT=${SDDEV}p2
+					else
+							            #SDPARTBOOT=${SDDEV}1
+							            #SDPARTROOT=${SDDEV}2
+					fi
+		else
+			break
+		fi
+}
+
+
+
+
 
 
 # Function to allow user to redo previous steps or continue
