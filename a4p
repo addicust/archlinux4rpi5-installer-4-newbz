@@ -318,5 +318,12 @@ exit
 #fstab fixer for non SD users automatic
 #
 #
+#####massive thanks to those who i stole from
+#https://kiljan.org/2023/11/24/arch-linux-arm-on-a-raspberry-pi-5-model-b/
+#
+#https://fleetstack.io/blog/raspberry-pi-etc-fstab-txt-file
+#
+#https://github.com/literatesnow/pi-5-archlinux-arm-encrypted-root
+#
 #
 #
