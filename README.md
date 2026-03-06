@@ -4,3 +4,11 @@ shamefully programmed using duck duck go in bash, proudly tested on a raspberry 
 my goal is to polish this turd so that any dummy, even myself 4 months ago, can install arch linux on raspberry pi 5.  hyprland works really well on a 16g pi5.
 
 if i finish all the features i have planned i might get ambitious and set up a chroot helper to use a arch linux arm on SD card for example to encrypt arch linux arm on nvme or usb.
+
+
+HOW TO
+
+To use this scipt the easiest way is to edit the default variables at the top of the program, but i included a menu that should help even the noobest pf newbs to get started on making a bootable arch for pi5 sd card or usb device.
+In the future i will set it up so you can pipe yes into it after changing default if, for some reason, you are writing many SD's
+
+I know this is a horrible ugly mess, this is my first repo, and the extent of my coding skills is writing bash scripts, with help from online.
