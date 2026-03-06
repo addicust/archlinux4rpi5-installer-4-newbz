@@ -1,0 +1,365 @@
+#!/bin/bash
+###depends
+#curl
+#popd/pushd
+#sed
+#tar
+#bdstar
+#makefs.vfat/makefs.ext4
+
+echo creating variables
+export SDDEV=/dev/sda
+export SDPARTBOOT=${SDDEV}1
+#make p1 and p2 for nvme, will be added in fstab fixer prompt
+export SDPARTROOT=${SDDEV}2
+export SDMOUNT=/mnt/SD
+
+export DLDIR=$HOME/Documents/a4pFiles
+#export DLDIR=/tmp/a4pTMP
+
+export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
+export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.15-1-aarch64.pkg.tar.xz"
+#find raspi kernel link here if updated https://fl.us.mirror.archlinuxarm.org/aarch64/core/
+export OSFILES=
+
+export LOCALFILES=n
+#export LOCALFILES=n
+
+
+a4pDev() {
+    while true; do
+        lsblk
+        
+        read -p "Enter the name of the storage device (or press y for default): " input
+
+        if [[ "$input" == "y" ]]; then
+            break
+        elif [[ -b "/dev/$input" ]]; then
+            SDDEV="/dev/$input"
+            SDPARTBOOT=${SDDEV}1
+            SDPARTROOT=${SDDEV}2
+        else
+            echo "Invalid selection. Enter a valid storage device name."
+            continue
+        fi
+        
+        # Confirm the selected device
+        echo "You have selected: $SDDEV"
+        read -p "This device will be overwritten, confirm (y/n)? " confirm
+        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+            echo "Storage device confirmed: $SDDEV"
+            break
+        else
+            echo "Try again."
+        fi
+    done
+}
+
+###bROKEN
+a4pChoose() {
+    while true; do
+        read -p "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
+
+        if [[ "$choice" == "d" || "$choice" == "D" ]]; then
+            # Prompt for the download URL
+		read -p "Enter the URL to download from (default is $DISTURL)" url
+		url="${url:-$DISTURL}"  # set to DISTURL if no input is provided
+            echo "You have selected download URL: $DISTURL"
+
+            # Confirm the download URL
+            read -p "Confirm this URL (y/n)? " confirm_url
+            if [[ "$confirm_url" == "y" || "$confirm_url" == "Y" ]]; then
+                echo "Download URL confirmed: $DISTURL"
+                LOCALFILES=n
+
+                # Prompt for the directory to save installation files
+                read -p "Choose a path to save installation files (default is $DLDIR): " path
+                DLDIR="${path:-$DLDIR}"
+                echo "You have selected: $DLDIR"
+                
+                # Confirm the installation directory
+                read -p "Confirm this path (y/n)? " confirm_path
+                if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
+                    echo "Installation path confirmed: $DLDIR"
+                    break
+                else
+                    echo "Let's try again."
+                fi
+            else
+                echo "Let's try again."
+            fi
+            
+        elif [[ "$choice" == "s" || "$choice" == "S" ]]; then
+            # Prompt for the existing files path
+            read -p "Enter the directory path for existing files: " path
+            OSFILES="$path"
+            
+            # Confirm the existing files path
+            echo "You have selected: $OSFILES"
+            read -p "Confirm this path (y/n)? " confirm_path
+            if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
+                echo "Existing files path confirmed: $OSFILES"
+                LOCALFILES=y
+                break
+            else
+                echo "Let's try again."
+            fi
+            
+        else
+            echo "Invalid option. Enter 'd' to download or 's' to select existing files."
+        fi
+    done
+}
+
+
+a4pChoose2() {
+    while true; do
+        read -p 'Do you want to (d)ownload files or (s)select existing? (Enter d, s, or y for default): ' choice
+
+        if [[ "$choice" == "d" || "$choice" == "D" ]]; then
+            read -p "Enter the URL to download from (default is $DISTURL): " url
+            DISTURL="${url:-$DISTURL}"
+            echo "You have selected: $DISTURL"
+        
+            read -p 'Confirm this URL (y/n)? ' confirm_url
+            if [[ "$confirm_url" == "y" || "$confirm_url" == "Y" ]]; then
+                echo "Download URL confirmed: $DISTURL"
+		LOCALFILES=n
+#CALLFUNCTION
+                break
+            else
+                echo "Try again."
+            fi
+            
+        elif [[ "$choice" == "s" || "$choice" == "S" || "$choice" == "y" ]]; then
+            read -p 'Enter the directory path (or press y for default): ' path
+            if [[ "$path" == "y" ]]; then
+                OSFILES="/tmp/arch4pi"
+            else
+                OSFILES="$path"
+            fi
+            
+            echo "You have selected: $OSFILES"
+            read -p 'Confirm this path (y/n)? ' confirm_path
+            if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
+                echo "Installation path confirmed: $OSFILES"
+		LOCALFILES=y
+                break
+            else
+                echo "Try again."
+            fi
+            
+        else
+            echo 'Invalid option. Enter d to download or s to select a path (or type y for default).'
+        fi
+    done
+}
+
+
+a4pOSstore() {
+local oldDLDIR=$DLDIR
+    while true; do
+        read -p 'Choose a path to save installation files to (or press y for default): ' input
+
+        # Expand tildes to full paths
+        input="${input/#\~/$HOME}"
+
+        # If user enters 'y', set to default path
+        if [[ "$input" == "y" ]]; then
+            DLDIR=$oldDLDIR
+        elif [[ -z "$input" || "$input" == "d" || "$input" == "default" ]]; then
+            DLDIR=$oldDLDIR
+        else
+            # Check if the input is a valid existing directory
+            if [[ -d "$input" ]]; then
+                DLDIR="$input"
+            else
+                echo "Invalid path. Enter a valid existing directory path."
+                continue
+            fi
+        fi
+        
+        # Confirm the selected path
+        echo "You have selected: $DLDIR"
+        read -p 'Confirm this path (y/n)? ' confirm
+        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+            echo "Path confirmed: $DLDIR"
+            break
+        else
+            echo "Try again."
+        fi
+    done
+}
+
+
+# Function to allow user to redo previous steps or continue
+a4pMenu() {
+    while true; do
+        echo "Y for default options or select any steps below to reconfigure."
+        echo '1) Select storage device'
+        echo '2) Select download URL or existing directory path'
+        echo '4) Continue (or type y)'
+
+        read -p 'Select an option (1-4 or y): ' option
+        
+        # Check if user typed 'y' for continue
+        if [[ "$option" == "y" ]]; then
+            echo "Proceeding with the selected options..."
+            return
+        fi
+
+        case $option in
+            1)
+                a4pDev
+                ;;
+            2)
+                a4pChoose
+                ;;
+            4)
+                echo "Proceeding with the selected options..."
+                return
+                ;;
+            *)
+                echo "Invalid option. Please select a valid number or y to continue."
+                ;;
+        esac
+    done
+}
+
+
+
+# Start the process with the a4pmenu function
+a4pMenu
+
+
+
+echo "You have selected $SDDEV as your storage device to overwrite."
+#echo "You have selected $DLDIR as your installation files directory."
+if [[ $LOCALFILES == "n" ]]; then
+	echo "You have selected $DISTURL to download to $DLDIR."
+else
+	echo "You have selected to install from $OSFILES."
+fi
+echo "$SDDEV will be mounted at $SDMOUNT."
+
+#exit
+
+
+############################functional part pasted in
+
+
+if [[ $LOCALFILES == "n" ]]; then
+	echo  make directory for arch image DL
+	mkdir -p $DLDIR
+	cd $DLDIR
+	curl -JLO $DISTURL
+else
+	mkdir -p $OSFILES
+	cd $OSFILES
+fi
+
+
+##make partition helper for dumeez
+echo "format device"
+sudo sfdisk --quiet --wipe always $SDDEV << EOF
+,512M,0c,
+,,,
+EOF
+
+  echo "create filesystem"
+sudo mkfs.vfat -F 32 $SDPARTBOOT
+sudo mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 -F $SDPARTROOT
+
+    echo "write image to disk, this will take a while."
+mkdir -p $SDMOUNT
+mount $SDPARTROOT $SDMOUNT
+mkdir -p ${SDMOUNT}/boot
+mount $SDPARTBOOT ${SDMOUNT}/boot
+
+bsdtar -xvpf ${DLDIR}/${DISTURL##*/} -C $SDMOUNT
+#bsdtar -xvpf ${DLDIR}/ArchLinuxARM-rpi-aarch64-latest.tar.gz -C $SDMOUNT
+
+
+
+  echo remove arch bootloader
+rm -rf ${SDMOUNT}/boot/*
+
+
+
+  echo "install raspi kernel"
+mkdir -p ${DLDIR}/linux-rpi
+pushd ${DLDIR}/linux-rpi
+#ask about DLFILES
+#####################################problems
+curl -JLO $RPIKURL
+cd ${DLDIR}/linux-rpi
+
+tar xf ${DLDIR}/linux-rpi/${RPIKURL##*/}
+#tar xf ${DLDIR}/linux-rpi/linux-rpi-6.12.58-1-aarch64.pkg.tar.xz
+
+cp -rf boot/* ${SDMOUNT}/boot/
+popd
+
+
+
+# Source - https://stackoverflow.com/a/9606535
+# Posted by jcollado, modified by community. See post Timeline for change history
+# Retrieved 2026-03-05, License - CC BY-SA 3.0
+
+
+	 echo "Find PARTUUID to fix /etc/fstab and /boot/cmdline.txt ...For SSD and usb users"
+
+#if [[ $SDDEV != /dev/mmcblk ]]; then
+	sudo blkid
+	export BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTBOOT) #this works
+	export ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTROOT)
+	#echo $BOOTPUUID
+	#echo $ROOTPUUID
+
+echo "Backing up and updating /etc/fstab"
+	sed -i.bac "s|/dev/mmcblk0p1|${BOOTPUUID}|g" ${SDMOUNT}/etc/fstab
+	echo "${ROOTPUUID}  /   vfat    defaults        0       0" >> ${SDMOUNT}/etc/fstab
+
+echo "backup and update /boot/cmdline.txt"
+	sed -i.bac "s|root=/dev/mmcblk0p2|root=${ROOTPUUID}|g" ${SDMOUNT}/boot/cmdline.txt #this works well
+#fi
+
+
+echo "Syncing, takes a while patience"
+sync && umount -R $SDMOUNT
+echo "COMPLETED. Eject and boot pi"
+
+if [[ $DLDIR == /tmp* ]]; then
+	#rm -r "$DLDIR"
+	echo "debug for del tmp"
+fi
+
+echo "Clean up after ourself, exiting."
+#rm -r $SDMOUNT
+exit
+
+
+####################################
+#
+#choose device
+#
+#choose existing files or download path
+#
+#download to tmp or save files
+#
+#partitioner prompt goes here
+#
+#confirm okay
+#
+#format
+#partition
+#writeFS
+#
+#
+#
+#
+#fstab fixer for non SD users automatic
+#
+#
+#
+#
