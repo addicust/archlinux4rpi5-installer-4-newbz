@@ -13,33 +13,32 @@
 echo creating variables
 export SDDEV=/dev/sda
 export SDPARTBOOT=${SDDEV}1
-#make p1 and p2 for nvme, will be added in fstab fixer prompt
-export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user may need to change this to p1 and p2 respectively. perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
+export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user may need to change this to p1 and p2 respectively.
 
 export SDMOUNT=/mnt/SD
 
 export DLDIR=~$SUDO_USER/Documents/a4pFiles #trying this later
-#export DLDIR=$HOME/Documents/a4pFiles #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?
+#export DLDIR=$HOME/Documents/a4pFiles #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?   perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
 #export DLDIR=/tmp/a4pTMP
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
 export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.15-1-aarch64.pkg.tar.xz"
 #find raspi kernel link here if updated https://fl.us.mirror.archlinuxarm.org/aarch64/core/
-export OSFILES=
 
 export LOCALFILES=n
 #export LOCALFILES=n
+
+export useFstabFixer=y
+export OSFILES= #not even used yet really
 
 
 a4pDev() {
     while true; do
         lsblk
         
-        read -p "Enter the name of the storage device (or press y for default): " input
+        read -p "Enter the name of the storage device: " input
 
-        if [[ "$input" == "y" ]]; then
-            break
-        elif [[ -b "/dev/$input" ]]; then
+		if [[ -b "/dev/$input" ]]; then
             SDDEV="/dev/$input"
             #SDPARTBOOT=${SDDEV}1
             #SDPARTROOT=${SDDEV}2 #wait to set these var until fstab helper get correct input from user
@@ -117,51 +116,7 @@ a4pChoose() {
 }
 
 
-a4pChoose2() {
-    while true; do
-        read -p 'Do you want to (d)ownload files or (s)select existing? (Enter d, s, or y for default): ' choice
-
-        if [[ "$choice" == "d" || "$choice" == "D" ]]; then
-            read -p "Enter the URL to download from (default is $DISTURL): " url
-            DISTURL="${url:-$DISTURL}"
-            echo "You have selected: $DISTURL"
-        
-            read -p 'Confirm this URL (y/n)? ' confirm_url
-            if [[ "$confirm_url" == "y" || "$confirm_url" == "Y" ]]; then
-                echo "Download URL confirmed: $DISTURL"
-		LOCALFILES=n
-#CALLFUNCTION
-                break
-            else
-                echo "Try again."
-            fi
-            
-        elif [[ "$choice" == "s" || "$choice" == "S" || "$choice" == "y" ]]; then
-            read -p 'Enter the directory path (or press y for default): ' path
-            if [[ "$path" == "y" ]]; then
-                OSFILES="/tmp/arch4pi"
-            else
-                OSFILES="$path"
-            fi
-            
-            echo "You have selected: $OSFILES"
-            read -p 'Confirm this path (y/n)? ' confirm_path
-            if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
-                echo "Installation path confirmed: $OSFILES"
-		LOCALFILES=y
-                break
-            else
-                echo "Try again."
-            fi
-            
-        else
-            echo 'Invalid option. Enter d to download or s to select a path (or type y for default).'
-        fi
-    done
-}
-
-
-a4pOSstore() {
+a4pOSstore() { #NOT EVEN USED I THINK
 local oldDLDIR="$DLDIR"
     while true; do
         read -p 'Choose a path to save installation files to (or press y for default): ' input
