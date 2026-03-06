@@ -70,7 +70,7 @@ local oldDLDir="$DLDIR"
                 echo "Download URL confirmed: $DISTURL"
                 LOCALFILES=n
 
-                # Prompt for the directory to save installation files
+                # Prompt for the directory to save installation files    ###ITHINK THIS FAILS DUE TO DIR NOT CREATED YET
                 read -p "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path
                 DLDIR="${path:-$oldDLDIR}"  #changed recently
                 echo "You have selected: $DLDIR"
