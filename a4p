@@ -136,6 +136,17 @@ done
 }
 
 
+#afterBoot() {
+
+#EOF
+#pacman-key --init
+#pacman-key --populate archlinuxarm
+
+#pacman -R linux-aarch64 uboot-raspberrypi
+#pacman -Syu --overwrite "/boot/*" linux-rpi
+#EOF
+#}
+
 
 #DUM DUM METHOD
 #DEVICE="/dev/sda"
