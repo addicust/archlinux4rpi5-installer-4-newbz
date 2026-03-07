@@ -17,4 +17,5 @@ I know this is a horrible ugly mess, this is my first repo, and the extent of my
 
 
 
-if i am able to choose a license it is gpl2, please dont sue me,  i am not liable for anything anywhere for any reasons. Running a script as root you have not looked over is a bad idea.  this scipt will allow you to destroy your computer if used.
+if i am able to choose a license it is gpl2, please dont sue me,  i am not liable for anything anywhere for any reasons. Running a script as root you have not looked over is a bad idea.  this scipt will allow you to destroy your computer if used.  Most anything fun is illegal in california, and causes cancer, including this script.
+ 
