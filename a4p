@@ -211,10 +211,10 @@ fi
 if [[ "$LOCALFILES" == "n" ]]; then
 	echo  make directory for arch image DL
 	mkdir -p "$DLDIR"
-	cd $DLDIR || echo "cd failed, returning to menu."; a4pMenu
+	cd "$DLDIR" || { echo "cd failed, returning to menu."; a4pMenu; }
 	curl -JLO "$DISTURL"
 else
-	cd "$DLDIR" || echo "cd failed, returning to menu."; a4pMenu
+	cd "$DLDIR" || { echo "cd failed, returning to menu."; a4pMenu; }
 fi
 
 
@@ -241,7 +241,7 @@ bsdtar -xvpf ${DLDIR}/${DISTURL##*/} -C "$SDMOUNT"
 
 
   echo remove arch bootloader
-rm -rf ${SDMOUNT}/boot/* || echo "failed to remove arch bootloader, returning to menu"; a4pMenu   #shellcheck recommends Use "${var:?}" to ensure this never expands to /boot/* .
+rm -rf ${SDMOUNT:?}/boot/* || { echo "failed to remove arch bootloader, returning to menu"; a4pMenu; }   #shellcheck recommends Use "${var:?}" to ensure this never expands to /boot/* .
 
 
 
@@ -252,7 +252,7 @@ if [[ "$LOCALFILES" == n ]]; then    #TEST THIS
 	#####################################problems
 	curl -JLO "$RPIKURL"
 else
-	pushd ${DLDIR}/linux-rpi || echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu  #shellchekc reccomends: Use 'pushd ... || exit' or 'pushd ... || return' in case pushd fails.
+	pushd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; } #shellchekc reccomends: Use 'pushd ... || exit' or 'pushd ... || return' in case pushd fails.
 fi
 
 cd ${DLDIR}/linux-rpi 
@@ -295,12 +295,12 @@ sync && umount -R $SDMOUNT
 echo "COMPLETED. Eject and boot pi"
 
 if [[ "$DLDIR" == /tmp* ]]; then
-	rm -r "$DLDIR" || echo "failed to delete OS install files at $DLDIR"; exit
+	rm -r "$DLDIR" || { echo "failed to delete OS install files at $DLDIR"; exit; }
 	echo "debug for del tmp"
 fi
 
 echo "Clean up after ourself, exiting."
-rm -r $SDMOUNT || echo "faailed to delete mount folder at $SDMOUNT"; exit
+rm -r $SDMOUNT || { echo "faailed to delete mount folder at $SDMOUNT"; exit; }
 exit
 
 
