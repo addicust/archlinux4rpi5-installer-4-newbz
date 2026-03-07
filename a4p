@@ -197,10 +197,8 @@ fi
 echo "$SDDEV will be mounted at $SDMOUNT."
 
 read -p "Does everything look correct? y to execute program with given parameters, n for menu." choice
-if [[ $choice == "y" ]]; then
-	continue   #IDK WHAT IM DOING HERE
-else
-	ap4Menu
+if [[ $choice == "n" ]]; then
+	ap4menu
 fi
 
 #exit
