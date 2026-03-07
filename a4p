@@ -196,7 +196,7 @@ else
 fi
 echo "$SDDEV will be mounted at $SDMOUNT."
 
-read -p "Does everything look correct? y to execute program with given parameters, n for menu." choice
+read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
 if [[ $choice == "y" ]]; then
 
 else
