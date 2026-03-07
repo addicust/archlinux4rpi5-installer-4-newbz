@@ -241,7 +241,7 @@ bsdtar -xvpf ${DLDIR}/${DISTURL##*/} -C "$SDMOUNT"
 
 
   echo remove arch bootloader
-rm -rf ${SDMOUNT:?}/boot/* || { echo "failed to remove arch bootloader, returning to menu"; a4pMenu; }   #shellcheck recommends Use "${var:?}" to ensure this never expands to /boot/* .
+rm -rf ${SDMOUNT:?}/boot/* || { echo "failed to remove arch bootloader, returning to menu"; a4pMenu; }
 
 
 
