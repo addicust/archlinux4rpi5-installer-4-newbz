@@ -32,7 +32,7 @@ a4pDev() {
     while true; do
         lsblk
         
-        read -pr "Enter the name of the storage device. NOTE, drives may not appear as you think they may due to things like SD to usb adapters, nvme to usv adapters: " input
+        read -p "Enter the name of the storage device. NOTE, drives may not appear as you think they may due to things like SD to usb adapters, nvme to usv adapters: " input
 
 		if [[ -b "/dev/$input" ]]; then
             SDDEV="/dev/$input"
@@ -43,7 +43,7 @@ a4pDev() {
         
         # Confirm the selected device
         echo "You have selected: $SDDEV"
-        read -pr 'This device will be overwritten, confirm (y/n)? ' confirm
+        read -p 'This device will be overwritten, confirm (y/n)? ' confirm
         if [[ $confirm == "y" || $confirm == "Y" ]]; then
             echo "Storage device confirmed: $SDDEV"
             break
@@ -58,27 +58,27 @@ a4pChoose() {
 local oldDLDIR=$DLDIR
 local oldDISTURL=$DISTURL
     while true; do
-        read -pr "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
+        read -p "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
 
         if [[ $choice == "d" || $choice == "D" ]]; then
             # Prompt for the download URL
-		read -pr "Enter the URL to download from (default is $oldDISTURL)" url  #CHANGES MADE TO KEEP OLD DEFAULT UNTIL CONFIRM TEST THIS
+		read -p "Enter the URL to download from (default is $oldDISTURL)" url  #CHANGES MADE TO KEEP OLD DEFAULT UNTIL CONFIRM TEST THIS
 		DISTURL="${url:-$oldDISTURL}"  # set to DISTURL if no input is provided #CHANGED url to DISTURL
             echo "You have selected download URL: $DISTURL"
 
             # Confirm the download URL
-            read -pr "Confirm this URL (y/n)? " confirm_url
+            read -p "Confirm this URL (y/n)? " confirm_url
             if [[ $confirm_url == "y" || "$confirm_url" == "Y" ]]; then
                 echo "Download URL confirmed: $DISTURL"
                 LOCALFILES=n
 
                 # Prompt for the directory to save installation files    ###ITHINK THIS FAILS DUE TO DIR NOT CREATED YET
-                read -pr "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path
+                read -p "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path
                 DLDIR="${path:-$oldDLDIR}"  #changed recently
                 echo "You have selected: $DLDIR"
                 
                 # Confirm the installation directory
-                read -pr "Confirm this path (y/n)? " confirm_path
+                read -p "Confirm this path (y/n)? " confirm_path
                 if [[ $confirm_path == "y" || $confirm_path == "Y" ]]; then
                     echo "Installation path confirmed: $DLDIR"
 					LOCALFILES=n
@@ -92,7 +92,7 @@ local oldDISTURL=$DISTURL
             
         elif [[ $choice == "s" || $choice == "S" ]]; then
             # Prompt for the existing files path
-            read -pr "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path  #DOES PI EVEN USE ISO OR IMG QUESTION
+            read -p "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path  #DOES PI EVEN USE ISO OR IMG QUESTION
             DLDIR=$path
             
             # Confirm the existing files path
@@ -119,7 +119,7 @@ fstabFixer() {  #TEST SO SEE IF WE CAN RUN THIS FOR SD CARDS WITH NO ILL EFECTS,
 
 while true; do
 
-        read -pr "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
+        read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
 
         if [[ $input == "y" || $input == "Y"  ]]; then
 			# Store all partitions into an array (skipping the first entry which is the disk itself)
@@ -168,7 +168,7 @@ a4pMenu() {
         echo '2) Select download URL or existing directory path'
         echo '4) Continue (or type y)'
 
-        read -pr 'Select an option (1-4 or y): ' option
+        read -p 'Select an option (1-4 or y): ' option
         
         # Check if user typed 'y' for continue
         if [[ $option == "y" || $option == "Y"  ]]; then
@@ -208,11 +208,11 @@ if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then
 else
 	echo "You have selected to install existing installation files from $DLDIR."
 fi
-read -pr "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
-if [[ $choice == "y" || $choice == "Y" ]]; then
-	:
+read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
+if [[ $choice != "y" || $choice != "Y" ]]; then
+	a4pMenu
 else
-	ap4menu
+	:
 fi
 
 #exit
