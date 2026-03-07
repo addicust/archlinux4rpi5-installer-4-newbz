@@ -73,7 +73,7 @@ local oldDISTURL=$DISTURL
                 LOCALFILES=n
 
                 # Prompt for the directory to save installation files    ###ITHINK THIS FAILS DUE TO DIR NOT CREATED YET
-                read -p "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path
+                read -p "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path   ###ISTHISGUNNABLOWMUD
                 DLDIR="${path:-$oldDLDIR}"  #changed recently
                 echo "You have selected: $DLDIR"
                 
@@ -210,27 +210,14 @@ else
 fi
 
 
-while true; do
-    read -p "Does everything look correct? y to execute, any other key for menu: " choice
-    
-    if [[ $choice =~ ^[Yy]$ ]]; then
-        echo "Proceeding with execution..."
-        # Your execution code goes here
-        break 
-    else
-        echo "Opening menu..."
-        a4pMenu
-        # The loop continues after the menu finishes, 
-        # or you can add a 'break' here if the menu should exit the script.
-    fi
-done #MORE AI SLOP CODE TO COMPLIMENT MY MAN MADE SLOP CODE
-
-#read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
-#if [[ $choice != "y" || $choice != "Y" ]]; then
-#	a4pMenu
-#else
-#	:
-#fi
+while true; do  #test this crapCRAPCODE
+	read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
+	if [[ $choice == "y" || $choice == "Y" ]]; then
+		:
+	else
+		a4pMenu
+	fi
+done
 
 #exit
 
