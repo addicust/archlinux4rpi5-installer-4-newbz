@@ -43,7 +43,7 @@ a4pDev() {
         
         # Confirm the selected device
         echo "You have selected: $SDDEV"
-        read -p 'This device will be overwritten, confirm (y/n)? ' confirm
+        read -p "This device will be overwritten, confirm (y/n)? " confirm
         if [[ $confirm == "y" || $confirm == "Y" ]]; then
             echo "Storage device confirmed: $SDDEV"
             break
@@ -97,7 +97,7 @@ local oldDISTURL=$DISTURL
             
             # Confirm the existing files path
             echo "You have selected: $DLDIR"
-            read -pr "Confirm this path (y/n)? " confirm_path
+            read -p "Confirm this path (y/n)? " confirm_path
             if [[ $confirm_path == "y" || "$confirm_path" == "Y" ]]; then
                 echo "Existing files path confirmed: $DLDIR"
                 LOCALFILES=y
@@ -168,7 +168,7 @@ a4pMenu() {
         echo '2) Select download URL or existing directory path'
         echo '4) Continue (or type y)'
 
-        read -p 'Select an option (1-4 or y): ' option
+        read -p "Select an option (1-4 or y): " option
         
         # Check if user typed 'y' for continue
         if [[ $option == "y" || $option == "Y"  ]]; then
