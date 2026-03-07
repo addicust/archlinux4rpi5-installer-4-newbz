@@ -248,21 +248,21 @@ rm -rf ${SDMOUNT:?}/boot/* || { echo "failed to remove arch bootloader, returnin
   echo "install raspi kernel"
 if [[ "$LOCALFILES" == n ]]; then    #TEST THIS
 	mkdir -p ${DLDIR}/linux-rpi
-	pushd ${DLDIR}/linux-rpi   #shecllcheck recommends: Use 'pushd ... || exit' or 'pushd ... || return' in case pushd fails.
+	pushd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 	#####################################problems
 	curl -JLO "$RPIKURL"
 else
-	pushd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; } #shellchekc reccomends: Use 'pushd ... || exit' or 'pushd ... || return' in case pushd fails.
+	pushd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 fi
 
-cd ${DLDIR}/linux-rpi 
+#ARE WE CD TO SAME DIR TWICE??
+cd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 
 tar xf ${DLDIR}/linux-rpi/${RPIKURL##*/}
 #tar xf ${DLDIR}/linux-rpi/linux-rpi-6.12.58-1-aarch64.pkg.tar.xz
 
 cp -rf boot/* ${SDMOUNT}/boot/
-popd  #shellcheck recommends: Use 'popd ... || exit' or 'popd ... || return' in case popd fails.
-
+popd || { echo "failed to change dir, returning to menu."; a4pMenu; }
 
 
 # Source - https://stackoverflow.com/a/9606535
@@ -277,8 +277,8 @@ echo "Set boot and root var names and find PARTUUID to fix /etc/fstab and /boot/
 	SDPARTROOT="/dev/${PARTS[1]}"
 
 	sudo blkid
-	export BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTBOOT) #this works   shellcheck says(warning): Declare and assign separately to avoid masking return values.
-	export ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTROOT)
+	export BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value "$SDPARTBOOT") #this works   shellcheck says(warning): Declare and assign separately to avoid masking return values.
+	export ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value "$SDPARTROOT")
 	#echo $BOOTPUUID
 	#echo $ROOTPUUID
 
