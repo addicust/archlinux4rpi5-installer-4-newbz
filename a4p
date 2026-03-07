@@ -9,22 +9,22 @@
 
 ######################i am currently coding from work... windows..... scpipt may be extra unstable untested code, all the functional parts are at the bottom below the functions, you can just edit the variables and select y at the menu
 echo creating variables
-export SDDEV="/dev/sda"
+export SDDEV="/dev/sda
 export SDPARTBOOT=${SDDEV}1
 export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user may need to change this to p1 and p2 respectively.
 
-export SDMOUNT="/mnt/SD"
+export SDMOUNT=/mnt/SD
 
 export DLDIR="~$SUDO_USER/Documents/a4pFiles" #trying this later
 #export DLDIR="$HOME/Documents/a4pFiles" #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?   perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
-#export DLDIR="/tmp/a4pTMP"
+#export DLDIR=/tmp/a4pTMP
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
 export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.15-1-aarch64.pkg.tar.xz"
 #find raspi kernel link here if updated https://fl.us.mirror.archlinuxarm.org/aarch64/core/
 
-export LOCALFILES="n"
-#export LOCALFILES="n"
+export LOCALFILES=n
+#export LOCALFILES=n
 
 
 a4pDev() {
@@ -54,8 +54,8 @@ a4pDev() {
 
 ###bROKEN
 a4pChoose() {
-local oldDLDIR="$DLDIR"
-local oldDISTURL="$DISTURL"
+local oldDLDIR=$DLDIR
+local oldDISTURL=$DISTURL
     while true; do
         read -p "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
 
@@ -80,7 +80,7 @@ local oldDISTURL="$DISTURL"
                 read -p "Confirm this path (y/n)? " confirm_path
                 if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
                     echo "Installation path confirmed: $DLDIR"
-					LOCALFILES="n"
+					LOCALFILES=n
                     break
                 else
                     echo "Let's try again."
@@ -92,14 +92,14 @@ local oldDISTURL="$DISTURL"
         elif [[ "$choice" == "s" || "$choice" == "S" ]]; then
             # Prompt for the existing files path
             read -p "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path
-            DLDIR="$path"
+            DLDIR=$path
             
             # Confirm the existing files path
             echo "You have selected: $DLDIR"
             read -p "Confirm this path (y/n)? " confirm_path
             if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
                 echo "Existing files path confirmed: $DLDIR"
-                LOCALFILES="y"
+                LOCALFILES=y
                 break
             else
                 echo "Let's try again."
@@ -120,11 +120,13 @@ while true; do
 
         read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
 
-        if [[ "$input" == "y" ]]; then
+        if [[ $input == "y" ]]; then
 			# Store all partitions into an array (skipping the first entry which is the disk itself)
-			mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)
+			mapfile -t PARTS < <(lsblk -nlo NAME $SDDEV | tail -n +2)
 			SDPARTBOOT="/dev/${PARTS[0]}"
 			SDPARTROOT="/dev/${PARTS[1]}"
+			#echo "Boot Partition: $SDPARTBOOT"
+			#echo "Root Partition: $SDPARTROOT"
 
 		else
 			break
@@ -187,17 +189,15 @@ a4pMenu
 
 
 
-echo "You have selected $SDDEV as your storage device to overwrite."
-#echo "You have selected $DLDIR as your installation files directory."
-if [[ $LOCALFILES == "n" ]]; then
-	echo "You have selected $DISTURL to download to $DLDIR."
-else
-	echo "You have selected to install from $OSFILES."
-fi
+echo "You have selected $SDDEV as your storage device to overwrite and install to."
 echo "$SDDEV will be mounted at $SDMOUNT."
-
+if [[ $LOCALFILES == "n" ]]; then
+	echo "You have to download from $DISTURL to $DLDIR."
+else
+	echo "You have selected to install existing installation files from $DLDIR."
+fi
 read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
-if [[ "$choice" == "y" ]]; then
+if [[ $choice == "y" ]]; then
 	:
 else
 	ap4menu
@@ -208,7 +208,7 @@ fi
 ############################functional part pasted in
 
 
-if [[ "$LOCALFILES" == "n" ]]; then
+if [[ $LOCALFILES == "n" ]]; then
 	echo  make directory for arch image DL
 	mkdir -p "$DLDIR"
 	cd "$DLDIR" || { echo "cd failed, returning to menu."; a4pMenu; }
@@ -308,9 +308,9 @@ exit
 #
 #choose device
 #
-#choose existing files or download path
+#choose existing files or download url and path
 #
-#download to tmp or save files
+#files in tmp are deleted upon exit
 #
 #partitioner prompt goes here
 #
@@ -323,10 +323,12 @@ exit
 #
 #
 #
-#fstab fixer for non SD users automatic
+#fstab fixer for non SD users automatic hopefully
 #
+# ask to inject afterboot file into root, useful if one does not have more than one computer
 #
-#####massive thanks to those who i stole from
+######massive thanks to those who i stole from
+#
 #https://kiljan.org/2023/11/24/arch-linux-arm-on-a-raspberry-pi-5-model-b/
 #
 #https://fleetstack.io/blog/raspberry-pi-etc-fstab-txt-file
