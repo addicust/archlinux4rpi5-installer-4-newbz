@@ -208,12 +208,29 @@ if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then
 else
 	echo "You have selected to install existing installation files from $DLDIR."
 fi
-read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
-if [[ $choice != "y" || $choice != "Y" ]]; then
-	a4pMenu
-else
-	:
-fi
+
+
+while true; do
+    read -p "Does everything look correct? y to execute, any other key for menu: " choice
+    
+    if [[ $choice =~ ^[Yy]$ ]]; then
+        echo "Proceeding with execution..."
+        # Your execution code goes here
+        break 
+    else
+        echo "Opening menu..."
+        a4pMenu
+        # The loop continues after the menu finishes, 
+        # or you can add a 'break' here if the menu should exit the script.
+    fi
+done #MORE AI SLOP CODE TO COMPLIMENT MY MAN MADE SLOP CODE
+
+#read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
+#if [[ $choice != "y" || $choice != "Y" ]]; then
+#	a4pMenu
+#else
+#	:
+#fi
 
 #exit
 
