@@ -43,7 +43,7 @@ a4pDev() {
         
         # Confirm the selected device
         echo "You have selected: $SDDEV"
-        read -p "This device will be overwritten, confirm (y/n)? " confirm
+        read -pr "This device will be overwritten, confirm (y/n)? " confirm
         if [[ $confirm == "y" || $confirm == "Y" ]]; then
             echo "Storage device confirmed: $SDDEV"
             break
