@@ -277,8 +277,8 @@ echo "Set boot and root var names and find PARTUUID to fix /etc/fstab and /boot/
 	SDPARTROOT="/dev/${PARTS[1]}"
 
 	sudo blkid
-	export BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value "$SDPARTBOOT") #this works   shellcheck says(warning): Declare and assign separately to avoid masking return values.
-	export ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value "$SDPARTROOT")
+	BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value "$SDPARTBOOT") #this works   shellcheck says(warning): Declare and assign separately to avoid masking return values.
+	ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value "$SDPARTROOT")
 	#echo $BOOTPUUID
 	#echo $ROOTPUUID
 
