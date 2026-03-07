@@ -54,7 +54,7 @@ a4pDev() {
 
 ###bROKEN
 a4pChoose() {
-local oldDLDir="$DLDIR"
+local oldDLDIR="$DLDIR"
 local oldDISTURL="$DISTURL"
     while true; do
         read -p "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
@@ -129,6 +129,7 @@ while true; do
 		else
 			break
 		fi
+done
 }
 
 
@@ -197,7 +198,7 @@ echo "$SDDEV will be mounted at $SDMOUNT."
 
 read -p "Does everything look correct? y to execute program with given parameters, n for menu." choice
 if [[ $choice == "y" ]]; then
-	break
+	continue   #IDK WHAT IM DOING HERE
 else
 	ap4Menu
 fi
@@ -211,15 +212,15 @@ if [[ $LOCALFILES == "n" ]]; then
 	echo  make directory for arch image DL
 	mkdir -p $DLDIR
 	cd $DLDIR
-	curl -JLO $DISTURL
+	curl -JLO "$DISTURL"
 else
-	cd $DLDIR
+	cd "$DLDIR"  # shellcheck recommends: Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
 fi
 
 
 ##make partition helper for dumeez
 echo "format device"
-sudo sfdisk --quiet --wipe always $SDDEV << EOF
+sudo sfdisk --quiet --wipe always "$SDDEV" << EOF
 ,512M,0c,
 ,,,
 EOF
@@ -240,18 +241,18 @@ bsdtar -xvpf ${DLDIR}/${DISTURL##*/} -C $SDMOUNT
 
 
   echo remove arch bootloader
-rm -rf ${SDMOUNT}/boot/*
+rm -rf ${SDMOUNT}/boot/*   #shellcheck recommends: Use "${var:?}" to ensure this never expands to /boot/* .
 
 
 
   echo "install raspi kernel"
 #if [[ $LOCALFILES == n ]]; then    #TEST THIS
 	mkdir -p ${DLDIR}/linux-rpi
-	pushd ${DLDIR}/linux-rpi
+	pushd ${DLDIR}/linux-rpi   #shecllcheck recommends: Use 'pushd ... || exit' or 'pushd ... || return' in case pushd fails.
 	#####################################problems
 	curl -JLO $RPIKURL
 #else
-	pushd ${DLDIR}/linux-rpi
+	pushd ${DLDIR}/linux-rpi  #shellchekc reccomends: Use 'pushd ... || exit' or 'pushd ... || return' in case pushd fails.
 #fi
 
 cd ${DLDIR}/linux-rpi
@@ -260,7 +261,7 @@ tar xf ${DLDIR}/linux-rpi/${RPIKURL##*/}
 #tar xf ${DLDIR}/linux-rpi/linux-rpi-6.12.58-1-aarch64.pkg.tar.xz
 
 cp -rf boot/* ${SDMOUNT}/boot/
-popd
+popd  #shellcheck recommends: Use 'popd ... || exit' or 'popd ... || return' in case popd fails.
 
 
 
@@ -276,7 +277,7 @@ echo "Set boot and root var names and find PARTUUID to fix /etc/fstab and /boot/
 	SDPARTROOT="/dev/${PARTS[1]}"
 
 	sudo blkid
-	export BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTBOOT) #this works
+	export BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTBOOT) #this works   shellcheck says(warning): Declare and assign separately to avoid masking return values.
 	export ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTROOT)
 	#echo $BOOTPUUID
 	#echo $ROOTPUUID
