@@ -9,7 +9,7 @@
 
 ######################i am currently coding from work... windows..... scpipt may be extra unstable untested code, all the functional parts are at the bottom below the functions, you can just edit the variables and select y at the menu
 echo creating variables
-export SDDEV="/dev/sda
+export SDDEV=/dev/sda
 export SDPARTBOOT=${SDDEV}1
 export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user may need to change this to p1 and p2 respectively.
 
@@ -43,7 +43,7 @@ a4pDev() {
         
         # Confirm the selected device
         echo "You have selected: $SDDEV"
-        read -pr "This device will be overwritten, confirm (y/n)? " confirm
+        read -pr 'This device will be overwritten, confirm (y/n)? ' confirm
         if [[ $confirm == "y" || $confirm == "Y" ]]; then
             echo "Storage device confirmed: $SDDEV"
             break
