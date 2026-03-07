@@ -26,6 +26,7 @@ export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.1
 export LOCALFILES=n
 #export LOCALFILES=n
 
+export AFTERBOOT=y
 
 a4pDev() {
     while true; do
@@ -43,7 +44,7 @@ a4pDev() {
         # Confirm the selected device
         echo "You have selected: $SDDEV"
         read -p "This device will be overwritten, confirm (y/n)? " confirm
-        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+        if [[ $confirm == "y" || $confirm == "Y" ]]; then
             echo "Storage device confirmed: $SDDEV"
             break
         else
@@ -59,7 +60,7 @@ local oldDISTURL=$DISTURL
     while true; do
         read -p "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
 
-        if [[ "$choice" == "d" || "$choice" == "D" ]]; then
+        if [[ $choice == "d" || $choice == "D" ]]; then
             # Prompt for the download URL
 		read -p "Enter the URL to download from (default is $oldDISTURL)" url  #CHANGES MADE TO KEEP OLD DEFAULT UNTIL CONFIRM TEST THIS
 		DISTURL="${url:-$oldDISTURL}"  # set to DISTURL if no input is provided #CHANGED url to DISTURL
@@ -67,7 +68,7 @@ local oldDISTURL=$DISTURL
 
             # Confirm the download URL
             read -p "Confirm this URL (y/n)? " confirm_url
-            if [[ "$confirm_url" == "y" || "$confirm_url" == "Y" ]]; then
+            if [[ $confirm_url == "y" || "$confirm_url" == "Y" ]]; then
                 echo "Download URL confirmed: $DISTURL"
                 LOCALFILES=n
 
@@ -78,7 +79,7 @@ local oldDISTURL=$DISTURL
                 
                 # Confirm the installation directory
                 read -p "Confirm this path (y/n)? " confirm_path
-                if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
+                if [[ $confirm_path == "y" || $confirm_path == "Y" ]]; then
                     echo "Installation path confirmed: $DLDIR"
 					LOCALFILES=n
                     break
@@ -89,15 +90,15 @@ local oldDISTURL=$DISTURL
                 echo "Let's try again."
             fi
             
-        elif [[ "$choice" == "s" || "$choice" == "S" ]]; then
+        elif [[ $choice == "s" || $choice == "S" ]]; then
             # Prompt for the existing files path
-            read -p "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path
+            read -p "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path  #DOES PI EVEN USE ISO OR IMG QUESTION
             DLDIR=$path
             
             # Confirm the existing files path
             echo "You have selected: $DLDIR"
             read -p "Confirm this path (y/n)? " confirm_path
-            if [[ "$confirm_path" == "y" || "$confirm_path" == "Y" ]]; then
+            if [[ $confirm_path == "y" || "$confirm_path" == "Y" ]]; then
                 echo "Existing files path confirmed: $DLDIR"
                 LOCALFILES=y
                 break
@@ -120,7 +121,7 @@ while true; do
 
         read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
 
-        if [[ $input == "y" ]]; then
+        if [[ $input == "y" || $input == "Y"  ]]; then
 			# Store all partitions into an array (skipping the first entry which is the disk itself)
 			mapfile -t PARTS < <(lsblk -nlo NAME $SDDEV | tail -n +2)
 			SDPARTBOOT="/dev/${PARTS[0]}"
@@ -159,7 +160,7 @@ a4pMenu() {
         read -p 'Select an option (1-4 or y): ' option
         
         # Check if user typed 'y' for continue
-        if [[ "$option" == "y" ]]; then
+        if [[ $option == "y" || $option == "Y"  ]]; then
             echo "Proceeding with the selected options..."
             return
         fi
@@ -191,13 +192,13 @@ a4pMenu
 
 echo "You have selected $SDDEV as your storage device to overwrite and install to."
 echo "$SDDEV will be mounted at $SDMOUNT."
-if [[ $LOCALFILES == "n" ]]; then
+if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then
 	echo "You have to download from $DISTURL to $DLDIR."
 else
 	echo "You have selected to install existing installation files from $DLDIR."
 fi
 read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
-if [[ $choice == "y" ]]; then
+if [[ $choice == "y" || $choice == "Y" ]]; then
 	:
 else
 	ap4menu
@@ -246,7 +247,7 @@ rm -rf ${SDMOUNT:?}/boot/* || { echo "failed to remove arch bootloader, returnin
 
 
   echo "install raspi kernel"
-if [[ "$LOCALFILES" == n ]]; then    #TEST THIS
+if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then    #TEST THIS
 	mkdir -p ${DLDIR}/linux-rpi
 	pushd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 	#####################################problems
@@ -300,7 +301,7 @@ if [[ "$DLDIR" == /tmp* ]]; then
 fi
 
 echo "Clean up after ourself, exiting."
-rm -r $SDMOUNT || { echo "faailed to delete mount folder at $SDMOUNT"; exit; }
+rm -r "$SDMOUNT" || { echo "faailed to delete mount folder at $SDMOUNT"; exit; }
 exit
 
 
