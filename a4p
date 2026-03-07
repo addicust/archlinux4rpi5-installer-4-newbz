@@ -32,7 +32,7 @@ a4pDev() {
     while true; do
         lsblk
         
-        read -p "Enter the name of the storage device. NOTE, drives may not appear as you think they may due to things like SD to usb adapters, nvme to usv adapters: " input
+        read -pr "Enter the name of the storage device. NOTE, drives may not appear as you think they may due to things like SD to usb adapters, nvme to usv adapters: " input
 
 		if [[ -b "/dev/$input" ]]; then
             SDDEV="/dev/$input"
@@ -58,27 +58,27 @@ a4pChoose() {
 local oldDLDIR=$DLDIR
 local oldDISTURL=$DISTURL
     while true; do
-        read -p "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
+        read -pr "Do you want to (d)ownload files or (s)elect existing files? (Enter d or s): " choice
 
         if [[ $choice == "d" || $choice == "D" ]]; then
             # Prompt for the download URL
-		read -p "Enter the URL to download from (default is $oldDISTURL)" url  #CHANGES MADE TO KEEP OLD DEFAULT UNTIL CONFIRM TEST THIS
+		read -pr "Enter the URL to download from (default is $oldDISTURL)" url  #CHANGES MADE TO KEEP OLD DEFAULT UNTIL CONFIRM TEST THIS
 		DISTURL="${url:-$oldDISTURL}"  # set to DISTURL if no input is provided #CHANGED url to DISTURL
             echo "You have selected download URL: $DISTURL"
 
             # Confirm the download URL
-            read -p "Confirm this URL (y/n)? " confirm_url
+            read -pr "Confirm this URL (y/n)? " confirm_url
             if [[ $confirm_url == "y" || "$confirm_url" == "Y" ]]; then
                 echo "Download URL confirmed: $DISTURL"
                 LOCALFILES=n
 
                 # Prompt for the directory to save installation files    ###ITHINK THIS FAILS DUE TO DIR NOT CREATED YET
-                read -p "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path
+                read -pr "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path
                 DLDIR="${path:-$oldDLDIR}"  #changed recently
                 echo "You have selected: $DLDIR"
                 
                 # Confirm the installation directory
-                read -p "Confirm this path (y/n)? " confirm_path
+                read -pr "Confirm this path (y/n)? " confirm_path
                 if [[ $confirm_path == "y" || $confirm_path == "Y" ]]; then
                     echo "Installation path confirmed: $DLDIR"
 					LOCALFILES=n
@@ -92,12 +92,12 @@ local oldDISTURL=$DISTURL
             
         elif [[ $choice == "s" || $choice == "S" ]]; then
             # Prompt for the existing files path
-            read -p "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path  #DOES PI EVEN USE ISO OR IMG QUESTION
+            read -pr "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path  #DOES PI EVEN USE ISO OR IMG QUESTION
             DLDIR=$path
             
             # Confirm the existing files path
             echo "You have selected: $DLDIR"
-            read -p "Confirm this path (y/n)? " confirm_path
+            read -pr "Confirm this path (y/n)? " confirm_path
             if [[ $confirm_path == "y" || "$confirm_path" == "Y" ]]; then
                 echo "Existing files path confirmed: $DLDIR"
                 LOCALFILES=y
@@ -119,11 +119,11 @@ fstabFixer() {  #TEST SO SEE IF WE CAN RUN THIS FOR SD CARDS WITH NO ILL EFECTS,
 
 while true; do
 
-        read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
+        read -pr "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
 
         if [[ $input == "y" || $input == "Y"  ]]; then
 			# Store all partitions into an array (skipping the first entry which is the disk itself)
-			mapfile -t PARTS < <(lsblk -nlo NAME $SDDEV | tail -n +2)
+			mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)
 			SDPARTBOOT="/dev/${PARTS[0]}"
 			SDPARTROOT="/dev/${PARTS[1]}"
 			#echo "Boot Partition: $SDPARTBOOT"
@@ -157,7 +157,7 @@ a4pMenu() {
         echo '2) Select download URL or existing directory path'
         echo '4) Continue (or type y)'
 
-        read -p 'Select an option (1-4 or y): ' option
+        read -pr 'Select an option (1-4 or y): ' option
         
         # Check if user typed 'y' for continue
         if [[ $option == "y" || $option == "Y"  ]]; then
@@ -197,7 +197,7 @@ if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then
 else
 	echo "You have selected to install existing installation files from $DLDIR."
 fi
-read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
+read -pr "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
 if [[ $choice == "y" || $choice == "Y" ]]; then
 	:
 else
@@ -233,10 +233,10 @@ sudo mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 -F "$SDPARTROOT"
 	echo "write image to disk, this will take a while."
 mkdir -p "$SDMOUNT"
 mount "$SDPARTROOT" "$SDMOUNT"
-mkdir -p ${SDMOUNT}/boot
+mkdir -p "${SDMOUNT}"/boot
 mount "$SDPARTBOOT" ${SDMOUNT}/boot
 
-bsdtar -xvpf ${DLDIR}/${DISTURL##*/} -C "$SDMOUNT"
+bsdtar -xvpf "${DLDIR}"/"${DISTURL##*/}" -C "$SDMOUNT"
 #bsdtar -xvpf ${DLDIR}/ArchLinuxARM-rpi-aarch64-latest.tar.gz -C $SDMOUNT
 
 
@@ -248,18 +248,18 @@ rm -rf ${SDMOUNT:?}/boot/* || { echo "failed to remove arch bootloader, returnin
 
   echo "install raspi kernel"
 if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then    #TEST THIS
-	mkdir -p ${DLDIR}/linux-rpi
-	pushd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+	mkdir -p "${DLDIR}"/linux-rpi
+	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 	#####################################problems
 	curl -JLO "$RPIKURL"
 else
-	pushd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 fi
 
 #ARE WE CD TO SAME DIR TWICE??
-cd ${DLDIR}/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 
-tar xf ${DLDIR}/linux-rpi/${RPIKURL##*/}
+tar xf "${DLDIR}"/linux-rpi/"${RPIKURL##*/}"
 #tar xf ${DLDIR}/linux-rpi/linux-rpi-6.12.58-1-aarch64.pkg.tar.xz
 
 cp -rf boot/* ${SDMOUNT}/boot/
