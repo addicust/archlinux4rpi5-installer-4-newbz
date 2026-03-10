@@ -23,7 +23,7 @@ export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.ta
 export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.16-2-aarch64.pkg.tar.xz"
 #find raspi kernel link here if updated https://fl.us.mirror.archlinuxarm.org/aarch64/core/
 
-export LOCALFILES=y
+export LOCALFILES=n
 #export LOCALFILES=n
 
 export AFTERBOOT=y
@@ -44,7 +44,7 @@ a4pDev() {
 	    a4pMenu
             #continue
         fi
-        
+
         # Confirm the selected device
         echo "You have selected: $SDDEV"
         read -p "This device will be overwritten, confirm (y/n)? " confirm
@@ -173,7 +173,7 @@ a4pMenu() {
         echo '4) Continue (or type y)'
 
         read -p "Select an option (1-4 or y): " option
-        
+
         # Check if user typed 'y' for continue
         if [[ $option == "y" || $option == "Y"  ]]; then
             echo "Proceeding with the selected options..."
@@ -201,29 +201,21 @@ a4pMenu() {
 }
 
 
-
-# Start the process with the a4pmenu function
-
-a4pMenu
-
-#a4pDev
-
-#a4pChoose
-
-a4pConfirm
-
 ############################functional part pasted in
+#####################################################
 
-
+a4pDLAlarm() {
 if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then
 	echo  "make directory for arch image at $DLDIR"
-	cd /home/$SUDO_USER
+	#####cd /home/$SUDO_USER
 	mkdir -p "$DLDIR"
 	cd "$DLDIR" # || { echo "cd failed, returning to menu."; a4pMenu; }
 	curl -JLO "$DISTURL"
 else
-	cd "$DLDIR" # || { echo "cd failed, returning to menu."; a4pMenu; }
+	####cd "$DLDIR" # || { echo "cd failed, returning to menu."; a4pMenu; }
+	echo "do we even need this"
 fi
+}
 
 
 ##make partition helper for dumeez
@@ -234,10 +226,9 @@ sudo sfdisk --quiet --wipe always "$SDDEV" << EOF
 ,,,
 EOF
 }
-a4pPart
 
 
-a4pPartSet() {
+a4pPartVar() {
 #WE NEED TO FIGURE OUT SDPARTBOOT AND ROOT HERE
 # Store all partitions into an array (skipping the first entry which is the disk itself)
 mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)
@@ -246,7 +237,6 @@ SDPARTROOT="/dev/${PARTS[1]}"
 echo "Boot Partition: $SDPARTBOOT"
 echo "Root Partition: $SDPARTROOT"
 }
-a4pPartSet
 
 
 a4pFS() {
@@ -254,7 +244,6 @@ a4pFS() {
 sudo mkfs.vfat -F 32 "$SDPARTBOOT"
 sudo mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 -F "$SDPARTROOT"
 }
-a4pFS
 
 
 a4pMNT() {
@@ -264,33 +253,35 @@ mount "$SDPARTROOT" "$SDMOUNT"
 mkdir -p "${SDMOUNT}"/boot
 mount "$SDPARTBOOT" ${SDMOUNT}/boot
 }
-a4pMNT
 
 
+a4pWAlarm() {
 echo "write image to disk, this will take a while."
 bsdtar -xvpf "${DLDIR}"/"${DISTURL##*/}" -C "$SDMOUNT"
 #bsdtar -xvpf ${DLDIR}/ArchLinuxARM-rpi-aarch64-latest.tar.gz -C $SDMOUNT
 
-
 echo "remove arch bootloader"
 rm -rf ${SDMOUNT:?}/boot/* || { echo "failed to remove arch bootloader, returning to menu"; a4pMenu; }
 
+}
+
 
 ####THIS CODE IS SUSPECT
-
-mkdir -p "${DLDIR}"/linux-rpi
-pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
-
+a4pDLKernel() {
 if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then    #TEST THIS
-	#####################################problems
+	echo "making linux-rpi dir for rpi kernel"
+	mkdir -p "${DLDIR}"/linux-rpi
+	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+
+	echo "downloading alarm"
 	curl -JLO "$RPIKURL"
-	cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+	#cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 
 else
-	#pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
-	cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
-
+	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+	echo "not downloading alarm"
 fi
+}
 
 
 a4pKernel() {
@@ -301,7 +292,6 @@ tar -xf "${DLDIR}"/linux-rpi/"${RPIKURL##*/}"
 cp -rf boot/* ${SDMOUNT}/boot/
 popd || { echo "failed to change dir, returning to menu."; a4pMenu; }
 }
-a4pKernel
 
 
 a4pFSTAB() {
@@ -309,14 +299,17 @@ if [[ $FSTABFIXER == "y" || $FSTABFIXER == "Y" ]]; then
 	echo "Backing up and updating /etc/fstab"
 
 	sed -i.bac "s|/dev/mmcblk0p1|${BOOTPUUID}|g" ${SDMOUNT}/etc/fstab
-	#echo "${ROOTPUUID}  /   vfat    defaults        0       0" >> ${SDMOUNT}/etc/fstab
+#	echo "${BOOTPUUID}  /boot   vfat    defaults        0       0" >> ${SDMOUNT}/etc/fstab
+	echo "${ROOTPUUID}  /   ext4    defaults        0       0" >> ${SDMOUNT}/etc/fstab
 
 	echo "backup and update /boot/cmdline.txt"
 
 	sed -i.bac "s|root=/dev/mmcblk0p2|root=${ROOTPUUID}|g" ${SDMOUNT}/boot/cmdline.txt #this works well
+#	echo "root=${ROOTPUUID} rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes splash quiet loglevel=3" > ${SDMOUNT}/boot/cmdline.txt
+
+
 fi
 }
-a4pFSTAB
 
 
 a4pAB() {
@@ -333,8 +326,36 @@ echo "afterboot file successfully installed at $SDMOUNT/root/afterBoot.txt"
 
 fi
 }
-a4pAB
 
+
+# Start the process with the a4pmenu function
+
+a4pMenu
+
+a4pDev
+a4pChoose
+
+a4pConfirm
+
+a4pDLAlarm
+
+a4pPart
+
+a4pPartVar
+
+a4pFS
+
+a4pMNT
+
+a4pWAlarm
+
+a4pDLKernel
+
+a4pKernel
+
+#a4pFSTAB
+
+a4pAB
 
 echo "Syncing, takes a while patience"
 sync && umount -R $SDMOUNT
@@ -352,26 +373,13 @@ exit
 
 ####################################
 #
-#choose device
-#
-#choose existing files or download url and path
-#
 #files in tmp are deleted upon exit
-#
-#partitioner prompt goes here
-#
-#confirm okay
-#
-#format
-#partition
-#writeFS
-#
 #
 #
 #
 #fstab fixer for non SD users automatic hopefully
 #
-# ask to inject afterboot file into root, useful if one does not have more than one computer
+#ask to inject afterboot file into root, useful if one does not have more than one computer
 #
 ######massive thanks to those who i stole from
 #
@@ -380,9 +388,7 @@ exit
 #https://fleetstack.io/blog/raspberry-pi-etc-fstab-txt-file
 #
 #https://github.com/literatesnow/pi-5-archlinux-arm-encrypted-root
-#
-#
-#
+##
 # Source - https://stackoverflow.com/a/9606535
 # Posted by jcollado, modified by community. See post Timeline for change history
 # Retrieved 2026-03-05, License - CC BY-SA 3.0
