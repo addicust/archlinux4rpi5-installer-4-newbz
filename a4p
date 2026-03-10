@@ -6,7 +6,8 @@
 #tar
 #bdstar
 #makefs.vfat/makefs.ext4
-###mostly functional
+
+######################i am currently coding from work... windows..... scpipt may be extra unstable untested code, all the functional parts are at the bottom below the functions, you can just edit the variables and select y at the menu
 echo creating variables
 export SDDEV=/dev/sdb
 export SDPARTBOOT=${SDDEV}1 #automatically changes later
@@ -19,7 +20,7 @@ export DLDIR="/home/$SUDO_USER/a4pFiles" #trying this later
 #export DLDIR=/tmp/a4pTMP
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
-export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.15-1-aarch64.pkg.tar.xz"
+export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.16-2-aarch64.pkg.tar.xz"
 #find raspi kernel link here if updated https://fl.us.mirror.archlinuxarm.org/aarch64/core/
 
 export LOCALFILES=y
@@ -211,9 +212,6 @@ a4pMenu
 
 a4pConfirm
 
-echo "done"
-#exit
-
 ############################functional part pasted in
 
 
@@ -229,70 +227,84 @@ fi
 
 
 ##make partition helper for dumeez
-echo "format device $SDDEV"
+a4pPart() {
+echo "format and partition $SDDEV"
 sudo sfdisk --quiet --wipe always "$SDDEV" << EOF
 ,512M,0c,
 ,,,
 EOF
+}
+a4pPart
 
+
+a4pPartSet() {
 #WE NEED TO FIGURE OUT SDPARTBOOT AND ROOT HERE
-
 # Store all partitions into an array (skipping the first entry which is the disk itself)
 mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)
 SDPARTBOOT="/dev/${PARTS[0]}"
 SDPARTROOT="/dev/${PARTS[1]}"
 echo "Boot Partition: $SDPARTBOOT"
 echo "Root Partition: $SDPARTROOT"
+}
+a4pPartSet
 
 
-
+a4pFS() {
 	echo "create filesystem"
 sudo mkfs.vfat -F 32 "$SDPARTBOOT"
 sudo mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 -F "$SDPARTROOT"
+}
+a4pFS
 
-	echo "write image to disk, this will take a while."
+
+a4pMNT() {
+echo "creating mount at $SDMOUNT"
 mkdir -p "$SDMOUNT"
 mount "$SDPARTROOT" "$SDMOUNT"
 mkdir -p "${SDMOUNT}"/boot
 mount "$SDPARTBOOT" ${SDMOUNT}/boot
+}
+a4pMNT
 
+
+echo "write image to disk, this will take a while."
 bsdtar -xvpf "${DLDIR}"/"${DISTURL##*/}" -C "$SDMOUNT"
 #bsdtar -xvpf ${DLDIR}/ArchLinuxARM-rpi-aarch64-latest.tar.gz -C $SDMOUNT
 
 
-
-  echo remove arch bootloader
+echo "remove arch bootloader"
 rm -rf ${SDMOUNT:?}/boot/* || { echo "failed to remove arch bootloader, returning to menu"; a4pMenu; }
 
 
+####THIS CODE IS SUSPECT
 
-  echo "install raspi kernel"
+mkdir -p "${DLDIR}"/linux-rpi
+pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+
 if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then    #TEST THIS
-	mkdir -p "${DLDIR}"/linux-rpi
-	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 	#####################################problems
 	curl -JLO "$RPIKURL"
 	cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 
 else
-	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+	#pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 	cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 
 fi
 
+
+a4pKernel() {
+echo "install raspi kernel at $PWD"
 #ARE WE CD TO SAME DIR TWICE??
-
-tar xf "${DLDIR}"/linux-rpi/"${RPIKURL##*/}"
-#tar xf ${DLDIR}/linux-rpi/linux-rpi-6.12.58-1-aarch64.pkg.tar.xz
-
+tar -xf "${DLDIR}"/linux-rpi/"${RPIKURL##*/}"
+#tar -xf "${DLDIR}"/linux-rpi/linux-rpi*
 cp -rf boot/* ${SDMOUNT}/boot/
 popd || { echo "failed to change dir, returning to menu."; a4pMenu; }
+}
+a4pKernel
 
 
-# Source - https://stackoverflow.com/a/9606535
-# Posted by jcollado, modified by community. See post Timeline for change history
-# Retrieved 2026-03-05, License - CC BY-SA 3.0
-
+a4pFSTAB() {
 if [[ $FSTABFIXER == "y" || $FSTABFIXER == "Y" ]]; then
 	echo "Backing up and updating /etc/fstab"
 
@@ -303,20 +315,25 @@ if [[ $FSTABFIXER == "y" || $FSTABFIXER == "Y" ]]; then
 
 	sed -i.bac "s|root=/dev/mmcblk0p2|root=${ROOTPUUID}|g" ${SDMOUNT}/boot/cmdline.txt #this works well
 fi
+}
+a4pFSTAB
 
 
+a4pAB() {
 if [[ $AFTERBOOT == "y" || $AFTERBOOt == "Y" ]]; then
 
-	cat << EOF > $SDMOUNT/root/afterBoot.txt
+cat << EOF > $SDMOUNT/root/afterBoot.txt
 pacman-key --init
 pacman-key --populate archlinuxarm
 
 pacman -R linux-aarch64 uboot-raspberrypi
 pacman -Syu --overwrite "/boot/*" linux-rpi
 EOF
-	echo "afterboot file successfully installed at $SDMOUNT/root/afterBoot.txt"
+echo "afterboot file successfully installed at $SDMOUNT/root/afterBoot.txt"
 
 fi
+}
+a4pAB
 
 
 echo "Syncing, takes a while patience"
@@ -366,3 +383,6 @@ exit
 #
 #
 #
+# Source - https://stackoverflow.com/a/9606535
+# Posted by jcollado, modified by community. See post Timeline for change history
+# Retrieved 2026-03-05, License - CC BY-SA 3.0
