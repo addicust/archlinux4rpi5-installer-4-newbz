@@ -1,4 +1,8 @@
 # ArchLinuxARM Installer for RPI-5 and RPI Zero 2W
+
+###EVERYTHING WORKS EXCEPT THE FSTABFIXER
+you may have to fix it yourself using blkid and noting the PUUID and changing them in /boot/cmdline.txt and /etc/fstab respectivley. Working on this
+
 With some tweaking it should work  on sd, usb, and nvme.
 
 Shamefully programmed using duckai, proudly tested on a raspberry pi zero 2w (all my pi5 OS work on the pi zero 2w).  I used a lot of help off the internet.
