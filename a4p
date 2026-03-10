@@ -16,7 +16,6 @@ export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user
 export SDMOUNT=/mnt/SD
 
 export DLDIR="/home/$SUDO_USER/a4pFiles" #trying this later
-#export DLDIR="/home/$SUDO_USER/Documents/a4pFiles" #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?   perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
 #export DLDIR=/tmp/a4pTMP
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
@@ -24,7 +23,6 @@ export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.1
 #find raspi kernel link here if updated https://fl.us.mirror.archlinuxarm.org/aarch64/core/
 
 export LOCALFILES=n
-#export LOCALFILES=n
 
 export AFTERBOOT=y
 export FSTABFIXER=y
@@ -275,7 +273,6 @@ if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then    #TEST THIS
 
 	echo "downloading alarm"
 	curl -JLO "$RPIKURL"
-	#cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 
 else
 	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
@@ -285,6 +282,7 @@ fi
 
 
 a4pKernel() {
+pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 echo "install raspi kernel at $PWD"
 #ARE WE CD TO SAME DIR TWICE??
 tar -xf "${DLDIR}"/linux-rpi/"${RPIKURL##*/}"
@@ -327,13 +325,11 @@ echo "afterboot file successfully installed at $SDMOUNT/root/afterBoot.txt"
 fi
 }
 
-
 # Start the process with the a4pmenu function
-
 a4pMenu
 
-a4pDev
-a4pChoose
+#a4pDev
+#a4pChoose
 
 a4pConfirm
 
@@ -367,7 +363,7 @@ if [[ "$DLDIR" == /tmp* ]]; then
 fi
 
 echo "Clean up after ourself, exiting."
-rm -r "$SDMOUNT" || { echo "faailed to delete mount folder at $SDMOUNT"; exit; }
+rm -r "$SDMOUNT" || { echo "failed to delete mount folder at $SDMOUNT"; exit; }
 exit
 
 
