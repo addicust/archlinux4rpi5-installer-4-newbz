@@ -6,55 +6,60 @@
 #tar
 #bdstar
 #makefs.vfat/makefs.ext4
-
-######################i am currently coding from work... windows..... scpipt may be extra unstable untested code, all the functional parts are at the bottom below the functions, you can just edit the variables and select y at the menu
+###mostly functional
 echo creating variables
-export SDDEV=/dev/sda
-export SDPARTBOOT=${SDDEV}1
+export SDDEV=/dev/sdb
+export SDPARTBOOT=${SDDEV}1 #automatically changes later
 export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user may need to change this to p1 and p2 respectively.
 
 export SDMOUNT=/mnt/SD
 
-export DLDIR="~$SUDO_USER/Documents/a4pFiles" #trying this later
-#export DLDIR="$HOME/Documents/a4pFiles" #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?   perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
+export DLDIR="/home/$SUDO_USER/a4pFiles" #trying this later
+#export DLDIR="/home/$SUDO_USER/Documents/a4pFiles" #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?   perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
 #export DLDIR=/tmp/a4pTMP
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
 export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.15-1-aarch64.pkg.tar.xz"
 #find raspi kernel link here if updated https://fl.us.mirror.archlinuxarm.org/aarch64/core/
 
-export LOCALFILES=n
+export LOCALFILES=y
 #export LOCALFILES=n
 
 export AFTERBOOT=y
+export FSTABFIXER=y
 
 a4pDev() {
     while true; do
+	clear
         lsblk
-        
+        echo
         read -p "Enter the name of the storage device. NOTE, drives may not appear as you think they may due to things like SD to usb adapters, nvme to usv adapters: " input
 
-		if [[ -b "/dev/$input" ]]; then
+	if [[ -b "/dev/$input" ]]; then
             SDDEV="/dev/$input"
         else
+	    clear
             echo "Invalid selection. Enter a valid storage device name."
-            continue
+	    a4pMenu
+            #continue
         fi
         
         # Confirm the selected device
         echo "You have selected: $SDDEV"
         read -p "This device will be overwritten, confirm (y/n)? " confirm
         if [[ $confirm == "y" || $confirm == "Y" ]]; then
-            echo "Storage device confirmed: $SDDEV"
-            break
+        	echo "Storage device confirmed: $SDDEV"
+		clear
+       		break
         else
             echo "Try again."
         fi
     done
 }
 
-###bROKEN
+
 a4pChoose() {
+clear
 local oldDLDIR=$DLDIR
 local oldDISTURL=$DISTURL
     while true; do
@@ -62,50 +67,64 @@ local oldDISTURL=$DISTURL
 
         if [[ $choice == "d" || $choice == "D" ]]; then
             # Prompt for the download URL
+		clear
 		read -p "Enter the URL to download from (default is $oldDISTURL)" url  #CHANGES MADE TO KEEP OLD DEFAULT UNTIL CONFIRM TEST THIS
-		DISTURL="${url:-$oldDISTURL}"  # set to DISTURL if no input is provided #CHANGED url to DISTURL
-            echo "You have selected download URL: $DISTURL"
+			DISTURL="${url:-$oldDISTURL}"  # set to DISTURL if no input is provided #CHANGED url to DISTURL
+	    		echo
+            		echo "You have selected download URL: $DISTURL"
 
             # Confirm the download URL
-            read -p "Confirm this URL (y/n)? " confirm_url
-            if [[ $confirm_url == "y" || "$confirm_url" == "Y" ]]; then
-                echo "Download URL confirmed: $DISTURL"
-                LOCALFILES=n
+		echo
+        	read -p "Confirm this URL (y/n)? " confirm_url
+			clear
+           		if [[ $confirm_url == "y" || "$confirm_url" == "Y" ]]; then
+                	echo "Download URL confirmed: $DISTURL"
+               		LOCALFILES=n
 
                 # Prompt for the directory to save installation files    ###ITHINK THIS FAILS DUE TO DIR NOT CREATED YET
+		echo
                 read -p "Choose a path to save installation files, any dir in /tmp will be deleted upon exit, if a dir doesn't exist, it will be created (default is $DLDIR): " path   ###ISTHISGUNNABLOWMUD
                 DLDIR="${path:-$oldDLDIR}"  #changed recently
+		echo
                 echo "You have selected: $DLDIR"
-                
+
                 # Confirm the installation directory
+		echo
                 read -p "Confirm this path (y/n)? " confirm_path
                 if [[ $confirm_path == "y" || $confirm_path == "Y" ]]; then
-                    echo "Installation path confirmed: $DLDIR"
-					LOCALFILES=n
-                    break
+			clear
+			echo "Installation path confirmed: $DLDIR"
+			LOCALFILES=n
+                	break
                 else
-                    echo "Let's try again."
+			clear
+                    	echo "Let's try again."
                 fi
             else
                 echo "Let's try again."
             fi
-            
+
         elif [[ $choice == "s" || $choice == "S" ]]; then
             # Prompt for the existing files path
-            read -p "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path  #DOES PI EVEN USE ISO OR IMG QUESTION
-            DLDIR=$path
-            
+		clear
+        	read -p "Enter the directory path for existing files with the OS img or iso in the directory and the RPI kernel in <dir>/linux-rpi/: " path  #DOES PI EVEN USE ISO OR IMG QUESTION
+        	DLDIR=$path
+
             # Confirm the existing files path
-            echo "You have selected: $DLDIR"
-            read -p "Confirm this path (y/n)? " confirm_path
-            if [[ $confirm_path == "y" || "$confirm_path" == "Y" ]]; then
-                echo "Existing files path confirmed: $DLDIR"
-                LOCALFILES=y
-                break
-            else
-                echo "Let's try again."
-            fi
-            
+		echo
+        	echo "You have selected: $DLDIR"
+		echo
+            	read -p "Confirm this path (y/n)? " confirm_path
+           	 if [[ $confirm_path == "y" || "$confirm_path" == "Y" ]]; then
+			clear
+                	echo "Existing files path confirmed: $DLDIR"
+                	LOCALFILES=y
+                	break
+            	else
+			clear
+                	echo "Let's try again."
+            	fi
+
         else
             echo "Invalid option. Enter 'd' to download or 's' to select existing files."
         fi
@@ -113,51 +132,35 @@ local oldDISTURL=$DISTURL
 }
 
 
-#do not use fstab fixer yet
+a4pAfter() {
+	clear
 
-fstabFixer() {  #TEST SO SEE IF WE CAN RUN THIS FOR SD CARDS WITH NO ILL EFECTS, in which case we will make it auto run every installation
-
-while true; do
-
-        read -p "If the device is not an SD card, /etc/fstab needs to be modified, press y to continue to fix fstab." input
-
-        if [[ $input == "y" || $input == "Y"  ]]; then
-			# Store all partitions into an array (skipping the first entry which is the disk itself)
-			mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)
-			SDPARTBOOT="/dev/${PARTS[0]}"
-			SDPARTROOT="/dev/${PARTS[1]}"
-			#echo "Boot Partition: $SDPARTBOOT"
-			#echo "Root Partition: $SDPARTROOT"
-
-		else
-			break
-		fi
-done
 }
 
 
-#afterBoot() {
+a4pConfirm() {
+clear
+	echo "You have selected $SDDEV as your storage device to overwrite and install to."
+	echo "$SDDEV will be mounted at $SDMOUNT."
 
-#EOF
-#pacman-key --init
-#pacman-key --populate archlinuxarm
+	if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then
+		echo "You have to download from $DISTURL to $DLDIR."
+	else
+		echo "You have selected to install existing installation files from $DLDIR."
+	fi
 
-#pacman -R linux-aarch64 uboot-raspberrypi
-#pacman -Syu --overwrite "/boot/*" linux-rpi
-#EOF
-#}
-
-
-#DUM DUM METHOD
-#DEVICE="/dev/sda"
-# 1. Get the first partition (index 1)
-#SDPARTBOOT="/dev/$(lsblk -nlo NAME "$DEVICE" | sed -n '2p')"
-# 2. Get the second partition (index 2)
-#SDPARTROOT="/dev/$(lsblk -nlo NAME "$DEVICE" | sed -n '3p')"
-# Display results
-#echo "Boot Partition: $SDPARTBOOT"
-#echo "Root Partition: $SDPARTROOT"
-
+	while true; do  #test this crapCRAPCODE
+		echo
+		read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
+		if [[ $choice == "y" || $choice == "Y" ]]; then
+			clear
+			return
+		else
+			clear
+			a4pMenu
+		fi
+	done
+}
 
 
 # Function to allow user to redo previous steps or continue
@@ -183,8 +186,10 @@ a4pMenu() {
             2)
                 a4pChoose
                 ;;
+	    3)
+		a4pAfter
+		;;
             4)
-                echo "Proceeding with the selected options..."
                 return
                 ;;
             *)
@@ -197,49 +202,49 @@ a4pMenu() {
 
 
 # Start the process with the a4pmenu function
+
 a4pMenu
 
+#a4pDev
 
+#a4pChoose
 
-echo "You have selected $SDDEV as your storage device to overwrite and install to."
-echo "$SDDEV will be mounted at $SDMOUNT."
-if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then
-	echo "You have to download from $DISTURL to $DLDIR."
-else
-	echo "You have selected to install existing installation files from $DLDIR."
-fi
+a4pConfirm
 
-
-while true; do  #test this crapCRAPCODE
-	read -p "Does everything look correct? y to execute program with given parameters, any other key for menu." choice
-	if [[ $choice == "y" || $choice == "Y" ]]; then
-		:
-	else
-		a4pMenu
-	fi
-done
-
+echo "done"
 #exit
 
 ############################functional part pasted in
 
 
-if [[ $LOCALFILES == "n" ]]; then
-	echo  make directory for arch image DL
+if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then
+	echo  "make directory for arch image at $DLDIR"
+	cd /home/$SUDO_USER
 	mkdir -p "$DLDIR"
-	cd "$DLDIR" || { echo "cd failed, returning to menu."; a4pMenu; }
+	cd "$DLDIR" # || { echo "cd failed, returning to menu."; a4pMenu; }
 	curl -JLO "$DISTURL"
 else
-	cd "$DLDIR" || { echo "cd failed, returning to menu."; a4pMenu; }
+	cd "$DLDIR" # || { echo "cd failed, returning to menu."; a4pMenu; }
 fi
 
 
 ##make partition helper for dumeez
-echo "format device"
+echo "format device $SDDEV"
 sudo sfdisk --quiet --wipe always "$SDDEV" << EOF
 ,512M,0c,
 ,,,
 EOF
+
+#WE NEED TO FIGURE OUT SDPARTBOOT AND ROOT HERE
+
+# Store all partitions into an array (skipping the first entry which is the disk itself)
+mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)
+SDPARTBOOT="/dev/${PARTS[0]}"
+SDPARTROOT="/dev/${PARTS[1]}"
+echo "Boot Partition: $SDPARTBOOT"
+echo "Root Partition: $SDPARTROOT"
+
+
 
 	echo "create filesystem"
 sudo mkfs.vfat -F 32 "$SDPARTBOOT"
@@ -267,12 +272,15 @@ if [[ $LOCALFILES == "n" || $LOCALFILES == "N" ]]; then    #TEST THIS
 	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 	#####################################problems
 	curl -JLO "$RPIKURL"
+	cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+
 else
 	pushd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+	cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
+
 fi
 
 #ARE WE CD TO SAME DIR TWICE??
-cd "${DLDIR}"/linux-rpi || { echo "failed to change to rpi kernel folder, returning to menu."; a4pMenu; }
 
 tar xf "${DLDIR}"/linux-rpi/"${RPIKURL##*/}"
 #tar xf ${DLDIR}/linux-rpi/linux-rpi-6.12.58-1-aarch64.pkg.tar.xz
@@ -285,25 +293,30 @@ popd || { echo "failed to change dir, returning to menu."; a4pMenu; }
 # Posted by jcollado, modified by community. See post Timeline for change history
 # Retrieved 2026-03-05, License - CC BY-SA 3.0
 
+if [[ $FSTABFIXER == "y" || $FSTABFIXER == "Y" ]]; then
+	echo "Backing up and updating /etc/fstab"
 
-echo "Set boot and root var names and find PARTUUID to fix /etc/fstab and /boot/cmdline.txt ...For SSD and usb users"
-
-	mapfile -t PARTS < <(lsblk -nlo NAME "$SDDEV" | tail -n +2)  #first intelligently set var names from array
-	SDPARTBOOT="/dev/${PARTS[0]}"
-	SDPARTROOT="/dev/${PARTS[1]}"
-
-	sudo blkid
-	BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value "$SDPARTBOOT") #this works   shellcheck says(warning): Declare and assign separately to avoid masking return values.
-	ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value "$SDPARTROOT")
-	#echo $BOOTPUUID
-	#echo $ROOTPUUID
-
-echo "Backing up and updating /etc/fstab"
 	sed -i.bac "s|/dev/mmcblk0p1|${BOOTPUUID}|g" ${SDMOUNT}/etc/fstab
 	#echo "${ROOTPUUID}  /   vfat    defaults        0       0" >> ${SDMOUNT}/etc/fstab
 
-echo "backup and update /boot/cmdline.txt"
+	echo "backup and update /boot/cmdline.txt"
+
 	sed -i.bac "s|root=/dev/mmcblk0p2|root=${ROOTPUUID}|g" ${SDMOUNT}/boot/cmdline.txt #this works well
+fi
+
+
+if [[ $AFTERBOOT == "y" || $AFTERBOOt == "Y" ]]; then
+
+	cat << EOF > $SDMOUNT/root/afterBoot.txt
+pacman-key --init
+pacman-key --populate archlinuxarm
+
+pacman -R linux-aarch64 uboot-raspberrypi
+pacman -Syu --overwrite "/boot/*" linux-rpi
+EOF
+	echo "afterboot file successfully installed at $SDMOUNT/root/afterBoot.txt"
+
+fi
 
 
 echo "Syncing, takes a while patience"
