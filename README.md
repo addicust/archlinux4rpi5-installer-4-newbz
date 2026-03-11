@@ -1,6 +1,7 @@
 # ArchLinuxARM Installer for RPI-5 and RPI Zero 2W
 
-###EVERYTHING WORKS!!!
+###just got the scipt to install on a 128gb usb stick using RASPIOS trixie 64bit on a pi zero 2w
+###tried on an nvme hat on my pi 5 using alarm and it failed to partition usinf sfdisk, i partitioned it manually using fdisk commented out the a4pPart function call at the bottom of the program, it appears to work report back shortly.
 
 With some tweaking it should work  on sd, usb, and nvme.
 
