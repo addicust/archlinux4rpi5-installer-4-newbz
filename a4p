@@ -9,14 +9,14 @@
 
 ######################i am currently coding from work... windows..... scpipt may be extra unstable untested code, all the functional parts are at the bottom below the functions, you can just edit the variables and select y at the menu
 echo creating variables
-export SDDEV=/dev/sdb
+export SDDEV=/dev/sda
 export SDPARTBOOT=${SDDEV}1 #automatically changes later
 export SDPARTROOT=${SDDEV}2 #depending on weather one is using usb or nvme, user may need to change this to p1 and p2 respectively.
 
 export SDMOUNT=/mnt/SD
 
-export DLDIR="/home/$SUDO_USER/a4pFiles" #trying this later
-#export DLDIR=/tmp/a4pTMP
+export DLDIR="/tmp/a4pFiles" #trying this later
+#export DLDIR="/home/$SUDO_USER/Documents/a4pFiles" #when ran as sudo chooses root directory, undesirable.  use ~$SUDO_USER here and elsewhere, and notify user when selecting their own paths.#or use sudo -e?   perhaps this: USER_HOME=$(eval echo "~$SUDO_USER")
 
 export DISTURL="http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz"
 export RPIKURL="https://fl.us.mirror.archlinuxarm.org/aarch64/core/linux-rpi-6.18.16-2-aarch64.pkg.tar.xz"
@@ -294,17 +294,24 @@ popd || { echo "failed to change dir, returning to menu."; a4pMenu; }
 
 a4pFSTAB() {
 if [[ $FSTABFIXER == "y" || $FSTABFIXER == "Y" ]]; then
-	echo "Backing up and updating /etc/fstab"
+	export BOOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTBOOT) #this works
+	export ROOTPUUID="PARTUUID="$(sudo blkid -s PARTUUID -o value $SDPARTROOT)
 
-	sed -i.bac "s|/dev/mmcblk0p1|${BOOTPUUID}|g" ${SDMOUNT}/etc/fstab
-#	echo "${BOOTPUUID}  /boot   vfat    defaults        0       0" >> ${SDMOUNT}/etc/fstab
+	#cmdline.txt
+	echo "backup and update /boot/cmdline.txt"
+	sed -i.bac "s|root=/dev/mmcblk0p2|root=${ROOTPUUID}|g" ${SDMOUNT}/boot/cmdline.txt
+
+	#fstab
+	echo "backing up and updating /etc/fstab"
+	sed -i.bck "s|/dev/mmcblk0p1|${BOOTPUUID}|g" ${SDMOUNT}/etc/fstab
 	echo "${ROOTPUUID}  /   ext4    defaults        0       0" >> ${SDMOUNT}/etc/fstab
 
-	echo "backup and update /boot/cmdline.txt"
 
-	sed -i.bac "s|root=/dev/mmcblk0p2|root=${ROOTPUUID}|g" ${SDMOUNT}/boot/cmdline.txt #this works well
+#	sed -i.bac "s|/dev/mmcblk0p1|${BOOTPUUID}|g" ${SDMOUNT}/etc/fstab
+#	echo "${BOOTPUUID}  /boot   vfat    defaults        0       0" >> ${SDMOUNT}/etc/fstab
+#	echo "${ROOTPUUID}  /   ext4    defaults        0       0" >> ${SDMOUNT}/etc/fstab
+#	sed -i.bac "s|root=/dev/mmcblk0p2|root=${ROOTPUUID}|g" ${SDMOUNT}/boot/cmdline.txt #this works well
 #	echo "root=${ROOTPUUID} rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes splash quiet loglevel=3" > ${SDMOUNT}/boot/cmdline.txt
-
 
 fi
 }
@@ -314,21 +321,25 @@ a4pAB() {
 if [[ $AFTERBOOT == "y" || $AFTERBOOt == "Y" ]]; then
 
 cat << EOF > $SDMOUNT/root/afterBoot.txt
-pacman-key --init
-pacman-key --populate archlinuxarm
+pacman-key --init && pacman-key --populate archlinuxarm
 
-pacman -R linux-aarch64 uboot-raspberrypi
-pacman -Syu --overwrite "/boot/*" linux-rpi
+yes | pacman -R linux-aarch64 uboot-raspberrypi
+yes | pacman -Syu --overwrite "/boot/*" linux-rpi
+
+reboot
+
 EOF
 echo "afterboot file successfully installed at $SDMOUNT/root/afterBoot.txt"
 
 fi
 }
 
+
 # Start the process with the a4pmenu function
+
 a4pMenu
 
-#a4pDev
+#a4pDev#called through menu
 #a4pChoose
 
 a4pConfirm
@@ -349,9 +360,11 @@ a4pDLKernel
 
 a4pKernel
 
-#a4pFSTAB
+a4pFSTAB
 
 a4pAB
+
+
 
 echo "Syncing, takes a while patience"
 sync && umount -R $SDMOUNT
