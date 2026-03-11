@@ -1,5 +1,5 @@
 #!/bin/bash
-
+###IGNORE THIS FILE COMPLETELY AND JUST FOLLOW THE INSTRUCTIONS OF THE FILE afterBoot.txt THAT WILL BE INJECTED INTO /root UPON INSTALLATION ON YOUR DEVICE.
 ########## configure pacman and repo install sudo and configure
   echo "Login as root"
 su root
