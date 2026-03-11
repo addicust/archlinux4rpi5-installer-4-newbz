@@ -1,7 +1,6 @@
 # ArchLinuxARM Installer for RPI-5 and RPI Zero 2W
 
-###EVERYTHING WORKS EXCEPT THE FSTABFIXER
-you may have to fix it yourself using blkid and noting the PUUID and changing them in /boot/cmdline.txt and /etc/fstab respectivley. Working on this
+###EVERYTHING WORKS!!!
 
 With some tweaking it should work  on sd, usb, and nvme.
 
@@ -19,6 +18,18 @@ Run as superuser
 The easiest way to use this scipt is to edit the default variables at the top of the program, and then press y at the main menu and y again for confirmation, but one can also use the menu.
 
 YOU MUST follow the after boot instructions to get the fan speed controller to work among other things.  FEAR NOT, if your fan is running full blast upon first boot, nothing is getting hot, upon following after boot and rebooting the fan speed will be under control.
+
+login as root user root is username and password
+
+type cat afterBoot.txt
+
+type the commands in one at a time in the order they appear in
+
+reboot
+
+login as root to install sudo and stuff set locale and all of that.
+
+login as alarm username alarm password alarm
 
 I know this is a ugly, this is my first repo, and the extent of my coding skills is writing bash scripts, with help from online.
 
