@@ -1,14 +1,14 @@
 #!/bin/bash
 ###IGNORE THIS FILE COMPLETELY AND JUST FOLLOW THE INSTRUCTIONS OF THE FILE afterBoot.txt THAT WILL BE INJECTED INTO /root UPON INSTALLATION ON YOUR DEVICE.
 ########## configure pacman and repo install sudo and configure
-  echo "Login as root"
-su root
+login as root
+username root
+password root
 
 pacman-key --init
 pacman-key --populate archlinuxarm
 
 pacman -R linux-aarch64 uboot-raspberrypi
-echo "When you restart your fan should be controlled by hardware, fear not"
 pacman -Syu --overwrite "/boot/*" linux-rpi
 
 sudo nano /etc/pacman.conf
@@ -17,10 +17,11 @@ sudo nano /etc/pacman.conf
 
 pacman -S sudo networkmanager
 
-uncomment wheel privlege line in nano /etc/sudoers
+####uncomment wheel privlege line in nano /etc/sudoers
 usermod -aG wheel alarm
 sudo chown -R alarm:alarm /home/alarm ###give user write permission in own home
 
+reboot
 
   echo "Set locale"
 nano /etc/locale.gen #uncommetn selected locale
