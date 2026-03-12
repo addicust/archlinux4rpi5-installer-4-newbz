@@ -7,7 +7,6 @@
 #bdstar
 #makefs.vfat/makefs.ext4
 
-######################i am currently coding from work... windows..... scpipt may be extra unstable untested code, all the functional parts are at the bottom below the functions, you can just edit the variables and select y at the menu
 echo creating variables
 export SDDEV=/dev/sda
 export SDPARTBOOT=${SDDEV}1 #automatically changes later
@@ -216,6 +215,14 @@ fi
 }
 
 
+a4pFormat() {
+sudo umount /dev/nvme0n1p?
+sudo wipefs --all --force /dev/nvme0n1p?
+sudo wipefs --all --force /dev/nvme0n1
+sudo dd if=/dev/zero of=/dev/nvme0n1 bs=1024 count=1
+}
+
+
 ##make partition helper for dumeez
 a4pPart() {
 sudo parted "$SDDEV" mklabel gpt
@@ -346,6 +353,8 @@ a4pMenu
 a4pConfirm
 
 a4pDLAlarm
+
+#a4pFormat
 
 a4pPart
 
