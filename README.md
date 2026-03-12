@@ -1,7 +1,8 @@
 # ArchLinuxARM Installer for RPI-5 and RPI Zero 2W
+#made for noobs, by noobs
 
 ###just got the scipt to install on a 128gb usb stick using RASPIOS trixie 64bit on a pi zero 2w
-###tried on an nvme hat on my pi 5 using alarm and it failed to partition usinf sfdisk, i partitioned it manually using fdisk commented out the a4pPart function call at the bottom of the program, IT FAILED TO BOOT, ALMOST CERTAINLY DUE TO THE FSTAB, LOOKING INTO FIXING SOON
+###just got it to install and boot off an nvme hat on my pi 5 using alarm, it failed to partition using sfdisk, partitioned it manually using gparted making sure to clear and create new GPT partition table and it worked fine on a geekworm nvme and poe hat with a GIGASTONE 500GB nvme SSD, by commenting out the a4pPart function call at the bottom(since i had partitioned manually).  SD users may want to run the scipt with the fstabFixer function callout at the bottom of the scipt with a pound symbol.
 
 With some tweaking it should work  on sd, usb, and nvme.
 
