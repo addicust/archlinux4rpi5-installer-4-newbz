@@ -218,6 +218,7 @@ fi
 
 ##make partition helper for dumeez
 a4pPart() {
+sudo parted "$SDDEV" mklabel gpt
 echo "format and partition $SDDEV"
 sudo sfdisk --quiet --wipe always "$SDDEV" << EOF
 ,512M,0c,
