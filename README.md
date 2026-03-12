@@ -19,6 +19,8 @@ Run as superuser
 
 The easiest way to use this scipt is to edit the default variables at the top of the program, and then press y at the main menu and y again for confirmation, but one can also use the menu.
 
+
+#CONNECT INTERNET BEFORE RUNNING AFTERBOOT COMMANDS
 YOU MUST follow the after boot instructions to get the fan speed controller to work among other things.  FEAR NOT, if your fan is running full blast upon first boot, nothing is getting hot, upon following after boot and rebooting the fan speed will be under control.
 
 login as root user root is username and password
