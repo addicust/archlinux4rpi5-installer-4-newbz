@@ -219,7 +219,7 @@ a4pFormat() {
 sudo umount /dev/nvme0n1p?
 sudo wipefs --all --force /dev/nvme0n1p?
 sudo wipefs --all --force /dev/nvme0n1
-sudo dd if=/dev/zero of=/dev/nvme0n1 bs=1024 count=1
+sudo dd if=/dev/zero of=$SDDEV bs=1024 count=1
 }
 
 
