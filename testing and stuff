@@ -1,0 +1,8 @@
+echo "ctrl_interface=DIR=/var/run/wpa_supplicant" > /mnt/root/etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+wpa_passphrase "wifi_network_name" "wifi_password" >> /mnt/root/etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+
+
+ln -s /usr/lib/systemd/system/dhcpcd@.service /mnt/root/etc/systemd/system/multi-user.target.wants/dhcpcd@wlan0.service
+
+
+ln -s /usr/share/dhcpcd/hooks/10-wpa_supplicant /mnt/root/usr/lib/dhcpcd/dhcpcd-hooks/
